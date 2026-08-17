@@ -1,0 +1,12 @@
+opencv-python
+streamlit
+Pillow
+numpy
+tensorflow
+protobuf
+scipy
+matplotlib
+tqdm
+ml-dtypes
+tensorboard
+keras
