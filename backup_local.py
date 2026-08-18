@@ -9,7 +9,6 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 
-from huggingface_hub import hf_hub_download
 
 # =============================================================================
 # STREAMLIT PAGE CONFIGURATION
@@ -33,13 +32,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # FILE PATHS
 # =============================================================================
 
-MODEL_REPO_ID = "AtharvaSalitri/eye-disease-model"
-
-MODEL_PATH = hf_hub_download(
-    repo_id=MODEL_REPO_ID,
-    filename="best_model.h5"
+MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "best_model.h5"
 )
-
 
 HERO_IMAGE_PATH = os.path.join(
     BASE_DIR,
