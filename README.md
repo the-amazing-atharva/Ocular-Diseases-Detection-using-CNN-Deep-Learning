@@ -4,6 +4,13 @@ A deep learning project that classifies retinal fundus images into four categori
 
 ---
 
+## 🚀 Live Demo
+
+👉 **[Try the Live Application](https://ocular-diseases-detection-atharva-salitri.streamlit.app/)**
+
+> ⚠️ This application is for educational and research demonstration
+> purposes only. It is not a medical diagnostic tool.
+
 ## 🩺 Problem Statement
 
 Early diagnosis of eye diseases like **Cataract**, **Glaucoma**, and **Diabetic Retinopathy** is critical for vision preservation. This project aims to automate disease detection from retinal images using Convolutional Neural Networks.
@@ -161,6 +168,185 @@ The Streamlit application provides:
 - ⚠️ Medical disclaimer
 
 ---
+
+## Diagrams:
+
+### 🧠 Project Architecture
+
+```mermaid
+flowchart LR
+    A["👁️ Retinal Fundus Image"] --> B["🖼️ Image Preprocessing"]
+    B --> C["📐 Resize 224×224"]
+    C --> D["🔢 Normalize 0–1"]
+    D --> E["🧠 Custom CNN"]
+
+    E --> F["🎯 Softmax Prediction"]
+    F --> G["👁️ Glaucoma"]
+    F --> H["✅ Normal"]
+    F --> I["👁️ Cataract"]
+    F --> J["🩸 Diabetic Retinopathy"]
+
+    E --> K["🔬 Grad-CAM"]
+    K --> L["🔥 Attention Heatmap"]
+
+    F --> M["📊 Confidence Scores"]
+    M --> N["📋 Prediction Report"]
+
+    style A fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style E fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+    style F fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style K fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+```
+
+### 🔬 Machine Learning Pipeline
+
+```mermaid
+flowchart TD
+    A["📂 Retinal Image Dataset"] --> B["🗂️ Organize Classes"]
+
+    B --> C["✂️ Train / Validation / Test Split"]
+
+    C --> D["🖼️ Image Preprocessing"]
+
+    D --> D1["Resize to 224×224"]
+    D --> D2["RGB Conversion"]
+    D --> D3["Normalize Pixel Values"]
+
+    D1 --> E["🔄 Data Augmentation"]
+    D2 --> E
+    D3 --> E
+
+    E --> F["🧠 Custom CNN Training"]
+
+    F --> G["📈 Model Evaluation"]
+
+    G --> G1["Accuracy"]
+    G --> G2["Precision"]
+    G --> G3["Recall"]
+    G --> G4["F1 Score"]
+    G --> G5["Confusion Matrix"]
+    G --> G6["ROC-AUC"]
+
+    F --> H["💾 Trained Model"]
+
+    H --> I["🤗 Hugging Face Hub"]
+
+    I --> J["🌐 Streamlit Application"]
+
+    style A fill:#e3f2fd,stroke:#1565c0
+    style F fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+    style G fill:#fff3e0,stroke:#ef6c00
+    style H fill:#e8f5e9,stroke:#2e7d32
+    style I fill:#fff8e1,stroke:#f9a825
+    style J fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+```
+
+### 🧠 Custom CNN Architecture
+
+```mermaid
+flowchart TD
+    A["Input Image<br/>224 × 224 × 3"]
+
+    A --> B["Conv2D<br/>ReLU"]
+    B --> C["Conv2D<br/>ReLU"]
+    C --> D["MaxPooling2D"]
+
+    D --> E["Conv2D<br/>ReLU"]
+    E --> F["Conv2D<br/>ReLU"]
+    F --> G["MaxPooling2D"]
+
+    G --> H["Conv2D<br/>ReLU"]
+    H --> I["Conv2D<br/>ReLU"]
+    I --> J["MaxPooling2D"]
+
+    J --> K["Conv2D<br/>ReLU<br/><b>conv2d_6</b>"]
+
+    K --> L["Flatten"]
+    L --> M["Dense"]
+    M --> N["Dropout"]
+    N --> O["Dense + Softmax"]
+
+    O --> P["Glaucoma"]
+    O --> Q["Normal"]
+    O --> R["Cataract"]
+    O --> S["Diabetic Retinopathy"]
+
+    style A fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style K fill:#ffccbc,stroke:#d84315,stroke-width:3px
+    style O fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+```
+
+### 🔥 Grad-CAM Explainability
+
+```mermaid
+flowchart LR
+    A["👁️ Input Retinal Image"] --> B["🧠 Custom CNN"]
+
+    B --> C["🎯 Predicted Class"]
+
+    B --> D["🔲 conv2d_6<br/>Feature Maps"]
+
+    C --> E["📐 Class Score"]
+
+    E --> F["∇ Gradients"]
+    D --> F
+
+    F --> G["📊 Global Average<br/>Pooling"]
+
+    G --> H["⚖️ Feature Map<br/>Weighting"]
+
+    H --> I["🔥 ReLU"]
+
+    I --> J["🌡️ Grad-CAM<br/>Heatmap"]
+
+    J --> K["🖼️ Resize Heatmap"]
+
+    K --> L["🎨 Overlay"]
+
+    L --> M["👁️ Explainability<br/>Visualization"]
+
+    style A fill:#e3f2fd,stroke:#1565c0
+    style B fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+    style D fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style J fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    style L fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+```
+
+### ☁️ Deployment Architecture
+
+```mermaid
+flowchart LR
+    U["👤 User"] --> S["🌐 Streamlit<br/>Community Cloud"]
+
+    S --> G["📦 GitHub Repository"]
+
+    G --> A["app.py"]
+    G --> R["requirements.txt"]
+    G --> V["Visualizations"]
+
+    S --> H["🤗 Hugging Face Hub"]
+
+    H --> M["🧠 best_model.h5<br/>~1.15 GB"]
+
+    M --> S
+
+    S --> P["🖼️ Image Preprocessing"]
+    P --> C["🧠 Custom CNN"]
+    C --> O["🎯 Prediction"]
+
+    O --> X["🔬 Grad-CAM"]
+    O --> Q["📊 Results"]
+
+    Q --> U
+    X --> U
+
+    style U fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style S fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style G fill:#fff3e0,stroke:#ef6c00
+    style H fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style M fill:#ede7f6,stroke:#4527a0,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+```
 
 ## 📁 Project Structure
 
