@@ -1,12 +1,14 @@
-opencv-python
+# opencv-python
 streamlit
 Pillow
 numpy
-tensorflow
+tensorflow==2.21.0
 protobuf
 scipy
 matplotlib
 tqdm
 ml-dtypes
 tensorboard
-keras
+keras==3.15.1
+huggingface_hub
+
