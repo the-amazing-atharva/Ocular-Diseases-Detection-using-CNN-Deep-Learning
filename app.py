@@ -3,13 +3,15 @@ import io
 import base64
 
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageStat, ImageFilter
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+from scipy import ndimage
 
 from huggingface_hub import hf_hub_download
+
 
 # =============================================================================
 # STREAMLIT PAGE CONFIGURATION
@@ -204,12 +206,16 @@ def load_cnn_model():
         # IMPORTANT:
         # Explicitly call the model once so that its weights and
         # computation are initialized before Grad-CAM.
+
         dummy_input = tf.zeros(
             (1, 224, 224, 3),
             dtype=tf.float32
         )
 
-        _ = loaded_model(dummy_input, training=False)
+        _ = loaded_model(
+            dummy_input,
+            training=False
+        )
 
         return loaded_model, None
 
@@ -232,8 +238,8 @@ if model is None:
     )
 
     st.info(
-        "Make sure 'best_model.h5' is located in the same directory "
-        "as this Streamlit Python file."
+        "Make sure the Hugging Face model repository contains "
+        "'best_model.h5' and that it can be downloaded."
     )
 
     st.stop()
@@ -243,8 +249,14 @@ if model is None:
 # MODEL INFORMATION
 # =============================================================================
 
-print("Custom CNN model loaded successfully.")
-print("Model input shape:", model.input_shape)
+print(
+    "Custom CNN model loaded successfully."
+)
+
+print(
+    "Model input shape:",
+    model.input_shape
+)
 
 
 # =============================================================================
@@ -253,7 +265,9 @@ print("Model input shape:", model.input_shape)
 
 def preprocess_image(image_file):
 
-    image = Image.open(image_file).convert("RGB")
+    image = Image.open(
+        image_file
+    ).convert("RGB")
 
     original_image = image.copy()
 
@@ -274,7 +288,486 @@ def preprocess_image(image_file):
         axis=0
     )
 
-    return image_batch, original_image, image
+    return (
+        image_batch,
+        original_image,
+        image
+    )
+
+
+# =============================================================================
+# NEW FEATURE
+# IMAGE QUALITY ASSESSMENT
+# =============================================================================
+
+def calculate_image_quality(image):
+    """
+    Analyze the uploaded image before prediction.
+
+    Metrics:
+    - Original resolution
+    - Brightness
+    - Contrast
+    - Sharpness using variance of Laplacian
+    - RGB validation
+    - Overall quality score
+
+    These are image-quality heuristics only.
+    They do NOT determine whether an image is medically valid.
+    """
+
+    image_rgb = image.convert("RGB")
+
+    width, height = image_rgb.size
+
+    image_array = np.asarray(
+        image_rgb,
+        dtype=np.float32
+    )
+
+    # -------------------------------------------------------------------------
+    # BRIGHTNESS
+    # -------------------------------------------------------------------------
+
+    grayscale = np.mean(
+        image_array,
+        axis=2
+    )
+
+    brightness = float(
+        np.mean(grayscale)
+    )
+
+    # -------------------------------------------------------------------------
+    # CONTRAST
+    # -------------------------------------------------------------------------
+
+    contrast = float(
+        np.std(grayscale)
+    )
+
+    # -------------------------------------------------------------------------
+    # SHARPNESS
+    # -------------------------------------------------------------------------
+
+    # Variance of the Laplacian is commonly used as a simple
+    # image-blur/sharpness heuristic.
+
+    laplacian = ndimage.laplace(
+        grayscale
+    )
+
+    sharpness = float(
+        np.var(laplacian)
+    )
+
+    # -------------------------------------------------------------------------
+    # IMAGE CHANNEL CHECK
+    # -------------------------------------------------------------------------
+
+    channel_count = 3
+
+    is_rgb = (
+        image.mode == "RGB"
+        and
+        image_array.ndim == 3
+        and
+        image_array.shape[2] == 3
+    )
+
+    # -------------------------------------------------------------------------
+    # RESOLUTION SCORE
+    # -------------------------------------------------------------------------
+
+    total_pixels = width * height
+
+    if total_pixels >= 1_000_000:
+
+        resolution_status = "🟢 Excellent"
+        resolution_score = 100
+
+    elif total_pixels >= 500_000:
+
+        resolution_status = "🟢 Good"
+        resolution_score = 90
+
+    elif total_pixels >= 200_000:
+
+        resolution_status = "🟡 Acceptable"
+        resolution_score = 70
+
+    else:
+
+        resolution_status = "🔴 Low"
+        resolution_score = 40
+
+    # -------------------------------------------------------------------------
+    # BRIGHTNESS STATUS
+    # -------------------------------------------------------------------------
+
+    if 45 <= brightness <= 210:
+
+        brightness_status = "🟢 Good"
+        brightness_score = 100
+
+    elif 30 <= brightness <= 230:
+
+        brightness_status = "🟡 Moderate"
+        brightness_score = 70
+
+    else:
+
+        brightness_status = "🔴 Extreme"
+        brightness_score = 35
+
+    # -------------------------------------------------------------------------
+    # CONTRAST STATUS
+    # -------------------------------------------------------------------------
+
+    if contrast >= 45:
+
+        contrast_status = "🟢 Good"
+        contrast_score = 100
+
+    elif contrast >= 25:
+
+        contrast_status = "🟡 Moderate"
+        contrast_score = 70
+
+    else:
+
+        contrast_status = "🔴 Low"
+        contrast_score = 40
+
+    # -------------------------------------------------------------------------
+    # SHARPNESS STATUS
+    # -------------------------------------------------------------------------
+
+    if sharpness >= 150:
+
+        sharpness_status = "🟢 Sharp"
+        sharpness_score = 100
+
+    elif sharpness >= 50:
+
+        sharpness_status = "🟡 Moderate"
+        sharpness_score = 70
+
+    else:
+
+        sharpness_status = "🔴 Potentially Blurry"
+        sharpness_score = 35
+
+    # -------------------------------------------------------------------------
+    # CHANNEL STATUS
+    # -------------------------------------------------------------------------
+
+    if is_rgb:
+
+        channel_status = "🟢 RGB"
+        channel_score = 100
+
+    else:
+
+        channel_status = "🟡 Converted to RGB"
+        channel_score = 80
+
+    # -------------------------------------------------------------------------
+    # OVERALL SCORE
+    # -------------------------------------------------------------------------
+
+    overall_score = (
+        resolution_score * 0.20
+        +
+        brightness_score * 0.20
+        +
+        contrast_score * 0.20
+        +
+        sharpness_score * 0.30
+        +
+        channel_score * 0.10
+    )
+
+    overall_score = float(
+        np.clip(
+            overall_score,
+            0,
+            100
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # OVERALL STATUS
+    # -------------------------------------------------------------------------
+
+    if overall_score >= 85:
+
+        overall_status = "🟢 Good Image Quality"
+
+    elif overall_score >= 65:
+
+        overall_status = "🟡 Moderate Image Quality"
+
+    else:
+
+        overall_status = "🔴 Poor Image Quality"
+
+    # -------------------------------------------------------------------------
+    # WARNINGS
+    # -------------------------------------------------------------------------
+
+    warnings = []
+
+    if total_pixels < 200_000:
+
+        warnings.append(
+            "The uploaded image has relatively low resolution."
+        )
+
+    if brightness < 30:
+
+        warnings.append(
+            "The image appears very dark."
+        )
+
+    elif brightness > 230:
+
+        warnings.append(
+            "The image appears very bright or overexposed."
+        )
+
+    if contrast < 25:
+
+        warnings.append(
+            "The image has relatively low contrast."
+        )
+
+    if sharpness < 50:
+
+        warnings.append(
+            "The image may be blurry or out of focus."
+        )
+
+    if not is_rgb:
+
+        warnings.append(
+            "The image was converted to RGB before prediction."
+        )
+
+    return {
+
+        "width": width,
+
+        "height": height,
+
+        "total_pixels": total_pixels,
+
+        "brightness": brightness,
+
+        "brightness_status": brightness_status,
+
+        "contrast": contrast,
+
+        "contrast_status": contrast_status,
+
+        "sharpness": sharpness,
+
+        "sharpness_status": sharpness_status,
+
+        "resolution_status": resolution_status,
+
+        "channel_count": channel_count,
+
+        "channel_status": channel_status,
+
+        "overall_score": overall_score,
+
+        "overall_status": overall_status,
+
+        "warnings": warnings
+    }
+
+
+# =============================================================================
+# DISPLAY IMAGE QUALITY ASSESSMENT
+# =============================================================================
+
+def display_image_quality_assessment(
+    image,
+    title="🖼️ Input Image Quality Assessment"
+):
+
+    quality = calculate_image_quality(
+        image
+    )
+
+    st.subheader(
+        title
+    )
+
+    st.caption(
+        "These measurements evaluate basic image characteristics "
+        "such as resolution, brightness, contrast, and sharpness. "
+        "They do not determine whether the image is medically "
+        "suitable or diagnostically valid."
+    )
+
+    # -------------------------------------------------------------------------
+    # OVERALL QUALITY
+    # -------------------------------------------------------------------------
+
+    quality_col1, quality_col2 = st.columns(
+        [1, 2]
+    )
+
+    with quality_col1:
+
+        st.metric(
+            "Overall Quality Score",
+            f"{quality['overall_score']:.1f}/100"
+        )
+
+    with quality_col2:
+
+        if quality["overall_score"] >= 85:
+
+            st.success(
+                quality["overall_status"]
+            )
+
+        elif quality["overall_score"] >= 65:
+
+            st.warning(
+                quality["overall_status"]
+            )
+
+        else:
+
+            st.error(
+                quality["overall_status"]
+            )
+
+    st.divider()
+
+    # -------------------------------------------------------------------------
+    # METRICS
+    # -------------------------------------------------------------------------
+
+    metric1, metric2, metric3, metric4 = st.columns(4)
+
+    with metric1:
+
+        st.metric(
+            "Resolution",
+            f"{quality['width']} × {quality['height']}"
+        )
+
+        st.caption(
+            quality["resolution_status"]
+        )
+
+    with metric2:
+
+        st.metric(
+            "Brightness",
+            f"{quality['brightness']:.1f}"
+        )
+
+        st.caption(
+            quality["brightness_status"]
+        )
+
+    with metric3:
+
+        st.metric(
+            "Contrast",
+            f"{quality['contrast']:.1f}"
+        )
+
+        st.caption(
+            quality["contrast_status"]
+        )
+
+    with metric4:
+
+        st.metric(
+            "Sharpness",
+            f"{quality['sharpness']:.1f}"
+        )
+
+        st.caption(
+            quality["sharpness_status"]
+        )
+
+    st.divider()
+
+    # -------------------------------------------------------------------------
+    # TECHNICAL DETAILS
+    # -------------------------------------------------------------------------
+
+    st.markdown(
+        "### 🔎 Technical Image Characteristics"
+    )
+
+    technical_col1, technical_col2 = st.columns(2)
+
+    with technical_col1:
+
+        st.write(
+            f"**Original dimensions:** "
+            f"{quality['width']} × {quality['height']}"
+        )
+
+        st.write(
+            f"**Total pixels:** "
+            f"{quality['total_pixels']:,}"
+        )
+
+        st.write(
+            f"**Color channels:** "
+            f"{quality['channel_count']}"
+        )
+
+    with technical_col2:
+
+        st.write(
+            f"**Brightness score:** "
+            f"{quality['brightness']:.2f}"
+        )
+
+        st.write(
+            f"**Contrast score:** "
+            f"{quality['contrast']:.2f}"
+        )
+
+        st.write(
+            f"**Sharpness score:** "
+            f"{quality['sharpness']:.2f}"
+        )
+
+    # -------------------------------------------------------------------------
+    # WARNINGS
+    # -------------------------------------------------------------------------
+
+    if quality["warnings"]:
+
+        st.markdown(
+            "### ⚠️ Image Quality Warnings"
+        )
+
+        for warning in quality["warnings"]:
+
+            st.warning(
+                warning
+            )
+
+    else:
+
+        st.success(
+            "No major basic image-quality issues were detected."
+        )
+
+    return quality
 
 
 # =============================================================================
@@ -308,38 +801,82 @@ def predict_image(image_file):
 
 
 # =============================================================================
-# GRAD-CAM
-# =============================================================================
-#
-# IMPORTANT:
-#
-# We DO NOT use:
-#
-# model.input
-# model.output
-#
-# because the loaded Sequential model may not expose a compatible
-# symbolic computation graph under the current Keras version.
-#
-# Instead, we rebuild a small Functional graph using the existing
-# trained layers and capture conv2d_6 directly during the forward pass.
-#
-# This is the key fix for:
-#
-# "The layer sequential has never been called and thus has no defined output."
-#
+# GRAD-CAM CONFIGURATION
 # =============================================================================
 
 GRADCAM_LAYER_NAME = "conv2d_6"
 
 
-def build_gradcam_model(target_layer_name):
+# =============================================================================
+# FIND USABLE GRAD-CAM LAYERS
+# =============================================================================
+
+def get_gradcam_layers():
+
+    usable_layers = []
+
+    for layer in model.layers:
+
+        try:
+
+            output_shape = layer.output.shape
+
+            # Grad-CAM requires a spatial feature map.
+            # We therefore look for 4D outputs:
+            #
+            # (batch, height, width, channels)
+
+            if (
+                len(output_shape) == 4
+                and
+                isinstance(
+                    layer,
+                    keras.layers.Conv2D
+                )
+            ):
+
+                usable_layers.append(
+                    layer.name
+                )
+
+        except Exception:
+
+            continue
+
+    return usable_layers
+
+
+GRADCAM_LAYERS = get_gradcam_layers()
+
+
+# =============================================================================
+# FALLBACK
+# =============================================================================
+
+if GRADCAM_LAYER_NAME not in GRADCAM_LAYERS:
+
+    if GRADCAM_LAYERS:
+
+        GRADCAM_LAYER_NAME = GRADCAM_LAYERS[-1]
+
+
+# =============================================================================
+# BUILD GRAD-CAM MODEL
+# =============================================================================
+
+def build_gradcam_model(
+    target_layer_name
+):
     """
     Build a fresh Functional graph from the already-loaded Sequential
     model layers.
 
     This avoids relying on model.input/model.output from the loaded
     H5 Sequential object.
+
+    The original trained layer objects are replayed in order, allowing
+    the selected convolutional layer to be captured during the same
+    forward computation that produces the final prediction.
     """
 
     target_layer = None
@@ -349,6 +886,7 @@ def build_gradcam_model(target_layer_name):
         if layer.name == target_layer_name:
 
             target_layer = layer
+
             break
 
     if target_layer is None:
@@ -357,19 +895,22 @@ def build_gradcam_model(target_layer_name):
             f"Layer '{target_layer_name}' was not found in the model."
         )
 
-    # Create a new symbolic input.
     inputs = keras.Input(
         shape=(224, 224, 3),
-        name="gradcam_input"
+        name=f"gradcam_input_{target_layer_name}"
     )
 
     x = inputs
+
     conv_outputs = None
 
     # Replay the ORIGINAL trained layers.
+
     for layer in model.layers:
 
-        x = layer(x)
+        x = layer(
+            x
+        )
 
         if layer.name == target_layer_name:
 
@@ -378,7 +919,8 @@ def build_gradcam_model(target_layer_name):
     if conv_outputs is None:
 
         raise ValueError(
-            f"Could not obtain output from layer '{target_layer_name}'."
+            f"Could not obtain output from layer "
+            f"'{target_layer_name}'."
         )
 
     predictions = x
@@ -389,19 +931,25 @@ def build_gradcam_model(target_layer_name):
             conv_outputs,
             predictions
         ],
-        name="gradcam_model"
+        name=f"gradcam_model_{target_layer_name}"
     )
 
     return grad_model
 
 
+# =============================================================================
+# CACHE MULTI-LAYER GRAD-CAM MODELS
+# =============================================================================
+
 @st.cache_resource
-def get_gradcam_model():
+def get_gradcam_model(
+    target_layer_name
+):
 
     try:
 
         grad_model = build_gradcam_model(
-            GRADCAM_LAYER_NAME
+            target_layer_name
         )
 
         return grad_model, None
@@ -417,13 +965,17 @@ def get_gradcam_model():
 
 def generate_gradcam(
     image_batch,
-    predicted_class_index
+    predicted_class_index,
+    target_layer_name
 ):
     """
-    Generate Grad-CAM heatmap for the predicted class.
+    Generate Grad-CAM heatmap for the selected class
+    and selected convolutional layer.
     """
 
-    grad_model, error = get_gradcam_model()
+    grad_model, error = get_gradcam_model(
+        target_layer_name
+    )
 
     if grad_model is None:
 
@@ -445,11 +997,13 @@ def generate_gradcam(
         )
 
         class_score = predictions[
-            :, predicted_class_index
+            :,
+            predicted_class_index
         ]
 
-    # Gradient of target class score with respect to
-    # convolutional feature maps.
+    # Gradient of target class score with respect
+    # to convolutional feature maps.
+
     grads = tape.gradient(
         class_score,
         conv_outputs
@@ -458,44 +1012,76 @@ def generate_gradcam(
     if grads is None:
 
         raise RuntimeError(
-            "Gradients could not be calculated for the selected "
-            "convolutional layer."
+            "Gradients could not be calculated for the "
+            "selected convolutional layer."
         )
 
     # Global average pooling of gradients.
+
     pooled_grads = tf.reduce_mean(
         grads,
         axis=(1, 2)
     )
 
     # Remove batch dimension.
+
     conv_outputs = conv_outputs[0]
+
     pooled_grads = pooled_grads[0]
 
     # Weighted combination of feature maps.
+
     heatmap = tf.reduce_sum(
         conv_outputs * pooled_grads,
         axis=-1
     )
 
-    # ReLU: only retain positive influence.
+    # ReLU:
+    # retain only positive influence.
+
     heatmap = tf.maximum(
         heatmap,
         0
     )
 
     # Normalize.
+
     max_value = tf.reduce_max(
         heatmap
     )
 
     heatmap = heatmap / (
-        max_value + tf.keras.backend.epsilon()
+        max_value
+        +
+        tf.keras.backend.epsilon()
     )
 
     heatmap = heatmap.numpy()
 
-    return heatmap
+    # Get feature map information.
+
+    feature_height = int(
+        conv_outputs.shape[0]
+    )
+
+    feature_width = int(
+        conv_outputs.shape[1]
+    )
+
+    feature_channels = int(
+        conv_outputs.shape[2]
+    )
+
+    feature_info = {
+        "height": feature_height,
+        "width": feature_width,
+        "channels": feature_channels
+    }
+
+    return (
+        heatmap,
+        feature_info
+    )
 
 
 # =============================================================================
@@ -513,14 +1099,18 @@ def create_gradcam_overlay(
     OpenCV is NOT required.
     """
 
-    # Convert original image to RGB.
     original_image = original_image.convert(
         "RGB"
     )
 
-    # Resize heatmap to original image dimensions.
+    # -------------------------------------------------------------------------
+    # RESIZE HEATMAP
+    # -------------------------------------------------------------------------
+
     heatmap_image = Image.fromarray(
-        np.uint8(heatmap * 255),
+        np.uint8(
+            heatmap * 255
+        ),
         mode="L"
     )
 
@@ -533,8 +1123,13 @@ def create_gradcam_overlay(
         heatmap_image
     ) / 255.0
 
-    # Use matplotlib's jet colormap.
-    cmap = plt.get_cmap("jet")
+    # -------------------------------------------------------------------------
+    # COLOR MAP
+    # -------------------------------------------------------------------------
+
+    cmap = plt.get_cmap(
+        "jet"
+    )
 
     colored_heatmap = cmap(
         heatmap_np
@@ -548,7 +1143,10 @@ def create_gradcam_overlay(
         colored_heatmap
     ).convert("RGB")
 
-    # Blend.
+    # -------------------------------------------------------------------------
+    # BLEND
+    # -------------------------------------------------------------------------
+
     overlay = Image.blend(
         original_image,
         colored_heatmap_image,
@@ -569,15 +1167,24 @@ def create_gradcam_overlay(
 def generate_eye_gradcam(
     image_batch,
     original_image,
-    predicted_class_index
+    predicted_class_index,
+    target_layer_name
 ):
 
-    heatmap = generate_gradcam(
+    (
+        heatmap,
+        feature_info
+    ) = generate_gradcam(
         image_batch,
-        predicted_class_index
+        predicted_class_index,
+        target_layer_name
     )
 
-    heatmap_image, colored_heatmap, overlay = create_gradcam_overlay(
+    (
+        heatmap_image,
+        colored_heatmap,
+        overlay
+    ) = create_gradcam_overlay(
         original_image,
         heatmap
     )
@@ -586,7 +1193,8 @@ def generate_eye_gradcam(
         heatmap,
         heatmap_image,
         colored_heatmap,
-        overlay
+        overlay,
+        feature_info
     )
 
 
@@ -739,7 +1347,7 @@ Normal
 Cataract
 Diabetic Retinopathy
 
-Grad-CAM Layer:
+Default Grad-CAM Layer:
 {GRADCAM_LAYER_NAME}
 
 ------------------------------------------------------------
@@ -788,7 +1396,9 @@ st.markdown(
 # HERO IMAGE
 # =============================================================================
 
-if os.path.isfile(HERO_IMAGE_PATH):
+if os.path.isfile(
+    HERO_IMAGE_PATH
+):
 
     st.image(
         HERO_IMAGE_PATH,
@@ -922,6 +1532,23 @@ with tab1:
                 width=300
             )
 
+            # NEW:
+            # Image quality analysis for left eye.
+
+            left_quality_image = Image.open(
+                Left_Eye
+            ).convert("RGB")
+
+            with st.expander(
+                "🖼️ Analyze Left Eye Image Quality",
+                expanded=True
+            ):
+
+                left_quality = display_image_quality_assessment(
+                    left_quality_image,
+                    title="🖼️ Left Eye - Input Image Quality"
+                )
+
     with col_display_right:
 
         if Right_Eye is not None:
@@ -931,6 +1558,23 @@ with tab1:
                 caption="Right Eye - Uploaded Image",
                 width=300
             )
+
+            # NEW:
+            # Image quality analysis for right eye.
+
+            right_quality_image = Image.open(
+                Right_Eye
+            ).convert("RGB")
+
+            with st.expander(
+                "🖼️ Analyze Right Eye Image Quality",
+                expanded=True
+            ):
+
+                right_quality = display_image_quality_assessment(
+                    right_quality_image,
+                    title="🖼️ Right Eye - Input Image Quality"
+                )
 
     # -------------------------------------------------------------------------
     # PREDICTION
@@ -965,6 +1609,7 @@ with tab1:
             )
 
             # Save results into session state.
+
             st.session_state[
                 "left_prediction"
             ] = (
@@ -983,6 +1628,20 @@ with tab1:
                 image_batch_right,
                 original_image_right,
                 processed_image_right
+            )
+
+            # Save image quality information.
+
+            st.session_state[
+                "left_quality"
+            ] = calculate_image_quality(
+                original_image_left
+            )
+
+            st.session_state[
+                "right_quality"
+            ] = calculate_image_quality(
+                original_image_right
             )
 
             # -----------------------------------------------------------------
@@ -1133,6 +1792,7 @@ with tab2:
           the model's capabilities.
         * Demonstrate the potential of AI in healthcare.
         * Provide explainability using Grad-CAM visualizations.
+        * Evaluate uploaded image quality before inference.
 
         **Diseases Classified:**
 
@@ -1151,9 +1811,12 @@ with tab2:
         Dropout, and a final Softmax classification layer.
 
         The final convolutional layer used for Grad-CAM
-        analysis is:
+        analysis by default is:
 
         `conv2d_6`
+
+        The Explainable AI Lab also allows other compatible
+        convolutional layers to be selected for comparison.
         """
     )
 
@@ -1177,6 +1840,7 @@ with tab3:
         ### 1. 🖼️ Image Upload and Preprocessing
 
         * Input images are uploaded by the user.
+        * Basic image-quality characteristics are analyzed.
         * Images are converted to RGB.
         * Images are resized to `224x224`.
         * Pixel values are normalized from `0-255` to `0-1`.
@@ -1209,6 +1873,9 @@ with tab3:
         Grad-CAM is used to visualize image regions that
         contributed to the model's classification.
 
+        Multiple compatible convolutional layers can be
+        selected in the Explainable AI Lab.
+
         ### 5. 🩺 Eye Comparison
 
         When both eyes are uploaded, the application compares
@@ -1218,6 +1885,15 @@ with tab3:
 
         A detailed text report can be generated containing
         predictions, confidence values, and model information.
+
+        ### 7. 🖼️ Input Image Quality
+
+        The application estimates basic image characteristics
+        including resolution, brightness, contrast, and
+        sharpness before inference.
+
+        These measurements are quality heuristics and do not
+        establish clinical image validity.
         """
     )
 
@@ -1263,7 +1939,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(distribution_path):
+    if os.path.isfile(
+        distribution_path
+    ):
 
         st.image(
             distribution_path,
@@ -1302,7 +1980,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(train_test_path):
+    if os.path.isfile(
+        train_test_path
+    ):
 
         st.image(
             train_test_path,
@@ -1342,7 +2022,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(model_building_path):
+    if os.path.isfile(
+        model_building_path
+    ):
 
         st.image(
             model_building_path,
@@ -1380,7 +2062,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(evaluation_path):
+    if os.path.isfile(
+        evaluation_path
+    ):
 
         st.image(
             evaluation_path,
@@ -1416,7 +2100,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(confusion_matrix_path):
+    if os.path.isfile(
+        confusion_matrix_path
+    ):
 
         st.image(
             confusion_matrix_path,
@@ -1454,7 +2140,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(roc_auc_path):
+    if os.path.isfile(
+        roc_auc_path
+    ):
 
         st.image(
             roc_auc_path,
@@ -1491,7 +2179,9 @@ with tab4:
         """
     )
 
-    if os.path.isfile(metrics_comparison_path):
+    if os.path.isfile(
+        metrics_comparison_path
+    ):
 
         st.image(
             metrics_comparison_path,
@@ -1510,13 +2200,13 @@ with tab4:
 
 
 # =============================================================================
-# TAB 5 - EXPLAINABLE AI / GRAD-CAM
+# TAB 5 - EXPLAINABLE AI / MULTI-LAYER GRAD-CAM LAB
 # =============================================================================
 
 with tab5:
 
     st.header(
-        "🔬 Explainable AI - Grad-CAM"
+        "🔬 Explainable AI - Multi-Layer Grad-CAM Lab"
     )
 
     st.markdown(
@@ -1525,9 +2215,9 @@ with tab5:
         provides a visual representation of image regions that
         contributed to the CNN's prediction.
 
-        The Grad-CAM implementation in this application uses
-        **`conv2d_6`**, the final convolutional layer of the
-        trained custom CNN.
+        This Explainability Lab extends the original Grad-CAM
+        implementation by allowing different convolutional
+        layers of the trained CNN to be inspected.
         """
     )
 
@@ -1559,8 +2249,196 @@ with tab5:
 
     st.divider()
 
+    # =========================================================================
+    # MULTI-LAYER SELECTOR
+    # =========================================================================
+
     st.subheader(
-        "🔍 Generate Grad-CAM Visualizations"
+        "🧠 CNN Layer Explorer"
+    )
+
+    if not GRADCAM_LAYERS:
+
+        st.error(
+            "No compatible Conv2D layers were detected for Grad-CAM."
+        )
+
+    else:
+
+        st.markdown(
+            """
+            Select a convolutional layer to inspect how the CNN's
+            learned feature representations contribute to the
+            selected prediction.
+
+            Earlier convolutional layers generally have higher
+            spatial resolution, while deeper layers typically
+            contain more task-specific representations.
+            """
+        )
+
+        selected_layer = st.selectbox(
+            "🔎 Select Grad-CAM Convolutional Layer",
+            options=GRADCAM_LAYERS,
+            index=(
+                GRADCAM_LAYERS.index(
+                    GRADCAM_LAYER_NAME
+                )
+                if GRADCAM_LAYER_NAME in GRADCAM_LAYERS
+                else len(GRADCAM_LAYERS) - 1
+            ),
+            key="gradcam_layer_selector"
+        )
+
+        # ---------------------------------------------------------------------
+        # LAYER INFORMATION
+        # ---------------------------------------------------------------------
+
+        selected_layer_object = None
+
+        for layer in model.layers:
+
+            if layer.name == selected_layer:
+
+                selected_layer_object = layer
+
+                break
+
+        if selected_layer_object is not None:
+
+            layer_col1, layer_col2, layer_col3 = st.columns(3)
+
+            with layer_col1:
+
+                st.metric(
+                    "Selected Layer",
+                    selected_layer
+                )
+
+            with layer_col2:
+
+                try:
+
+                    layer_output_shape = (
+                        selected_layer_object.output.shape
+                    )
+
+                    st.metric(
+                        "Feature Map Size",
+                        (
+                            f"{layer_output_shape[1]} × "
+                            f"{layer_output_shape[2]}"
+                        )
+                    )
+
+                except Exception:
+
+                    st.metric(
+                        "Feature Map Size",
+                        "Unavailable"
+                    )
+
+            with layer_col3:
+
+                try:
+
+                    layer_output_shape = (
+                        selected_layer_object.output.shape
+                    )
+
+                    st.metric(
+                        "Feature Channels",
+                        str(
+                            layer_output_shape[-1]
+                        )
+                    )
+
+                except Exception:
+
+                    st.metric(
+                        "Feature Channels",
+                        "Unavailable"
+                    )
+
+        st.divider()
+
+        # =========================================================================
+        # LAYER TABLE
+        # =========================================================================
+
+        st.subheader(
+            "📚 Available CNN Convolutional Layers"
+        )
+
+        layer_table_data = []
+
+        for index, layer_name in enumerate(
+            GRADCAM_LAYERS,
+            start=1
+        ):
+
+            layer_object = None
+
+            for layer in model.layers:
+
+                if layer.name == layer_name:
+
+                    layer_object = layer
+
+                    break
+
+            if layer_object is not None:
+
+                try:
+
+                    output_shape = (
+                        str(
+                            layer_object.output.shape
+                        )
+                    )
+
+                except Exception:
+
+                    output_shape = "Unavailable"
+
+                try:
+
+                    parameters = (
+                        layer_object.count_params()
+                    )
+
+                except Exception:
+
+                    parameters = 0
+
+                layer_table_data.append(
+                    {
+                        "Layer": index,
+                        "Name": layer_name,
+                        "Type": type(
+                            layer_object
+                        ).__name__,
+                        "Output Shape": output_shape,
+                        "Parameters": parameters
+                    }
+                )
+
+        if layer_table_data:
+
+            st.dataframe(
+                layer_table_data,
+                use_container_width=True,
+                hide_index=True
+            )
+
+        st.divider()
+
+    # =========================================================================
+    # GENERATE GRAD-CAM
+    # =========================================================================
+
+    st.subheader(
+        "🔍 Generate Multi-Layer Grad-CAM Visualizations"
     )
 
     if (
@@ -1574,6 +2452,13 @@ with tab5:
             "in the 🔍 Prediction tab first."
         )
 
+    elif not GRADCAM_LAYERS:
+
+        st.error(
+            "Grad-CAM cannot be generated because no compatible "
+            "convolutional layers were detected."
+        )
+
     else:
 
         (
@@ -1582,7 +2467,9 @@ with tab5:
             left_image_batch,
             left_original_image,
             left_processed_image
-        ) = st.session_state["left_prediction"]
+        ) = st.session_state[
+            "left_prediction"
+        ]
 
         (
             right_class_index,
@@ -1590,7 +2477,9 @@ with tab5:
             right_image_batch,
             right_original_image,
             right_processed_image
-        ) = st.session_state["right_prediction"]
+        ) = st.session_state[
+            "right_prediction"
+        ]
 
         # ---------------------------------------------------------------------
         # LEFT EYE
@@ -1606,11 +2495,13 @@ with tab5:
                 left_heatmap,
                 left_gray_heatmap,
                 left_colored_heatmap,
-                left_overlay
+                left_overlay,
+                left_feature_info
             ) = generate_eye_gradcam(
                 left_image_batch,
                 left_original_image,
-                left_class_index
+                left_class_index,
+                selected_layer
             )
 
             left_class = class_names[
@@ -1621,6 +2512,20 @@ with tab5:
                 f"Model Prediction: "
                 f"**{DISPLAY_NAMES[left_class]}** "
                 f"({left_probs[left_class_index] * 100:.2f}%)"
+            )
+
+            st.info(
+                f"""
+                **Selected Layer:** `{selected_layer}`
+
+                **Feature Map:** 
+                `{left_feature_info['height']} × `
+                `{left_feature_info['width']} × `
+                `{left_feature_info['channels']}`
+
+                The heatmap is generated with respect to the
+                predicted class **{DISPLAY_NAMES[left_class]}**.
+                """
             )
 
             col1, col2, col3 = st.columns(3)
@@ -1637,7 +2542,10 @@ with tab5:
 
                 st.image(
                     left_colored_heatmap,
-                    caption="Grad-CAM Heatmap",
+                    caption=(
+                        f"Grad-CAM Heatmap - "
+                        f"{selected_layer}"
+                    ),
                     width="stretch"
                 )
 
@@ -1676,11 +2584,13 @@ with tab5:
                 right_heatmap,
                 right_gray_heatmap,
                 right_colored_heatmap,
-                right_overlay
+                right_overlay,
+                right_feature_info
             ) = generate_eye_gradcam(
                 right_image_batch,
                 right_original_image,
-                right_class_index
+                right_class_index,
+                selected_layer
             )
 
             right_class = class_names[
@@ -1691,6 +2601,20 @@ with tab5:
                 f"Model Prediction: "
                 f"**{DISPLAY_NAMES[right_class]}** "
                 f"({right_probs[right_class_index] * 100:.2f}%)"
+            )
+
+            st.info(
+                f"""
+                **Selected Layer:** `{selected_layer}`
+
+                **Feature Map:** 
+                `{right_feature_info['height']} × `
+                `{right_feature_info['width']} × `
+                `{right_feature_info['channels']}`
+
+                The heatmap is generated with respect to the
+                predicted class **{DISPLAY_NAMES[right_class]}**.
+                """
             )
 
             col1, col2, col3 = st.columns(3)
@@ -1707,7 +2631,10 @@ with tab5:
 
                 st.image(
                     right_colored_heatmap,
-                    caption="Grad-CAM Heatmap",
+                    caption=(
+                        f"Grad-CAM Heatmap - "
+                        f"{selected_layer}"
+                    ),
                     width="stretch"
                 )
 
@@ -1729,6 +2656,39 @@ with tab5:
             st.code(
                 str(e)
             )
+
+        st.divider()
+
+        # =========================================================================
+        # EXPLAINABILITY COMPARISON
+        # =========================================================================
+
+        st.subheader(
+            "🧩 Understanding the Selected Layer"
+        )
+
+        st.markdown(
+            f"""
+            The selected layer is **`{selected_layer}`**.
+
+            The Grad-CAM visualization is generated by measuring
+            the gradients of the selected class score with respect
+            to the feature maps produced by this convolutional layer.
+
+            This allows the application to visualize which spatial
+            regions of the input image are associated with the
+            model's prediction.
+
+            Selecting a different convolutional layer can produce
+            a different visualization because the feature
+            representations change throughout the CNN.
+            """
+        )
+
+        st.caption(
+            "Grad-CAM is an interpretability technique and should "
+            "not be treated as a clinical localization method."
+        )
 
 
 # =============================================================================
@@ -1771,7 +2731,9 @@ with tab6:
             left_image_batch,
             left_original_image,
             left_processed_image
-        ) = st.session_state["left_prediction"]
+        ) = st.session_state[
+            "left_prediction"
+        ]
 
         (
             right_class_index,
@@ -1779,7 +2741,9 @@ with tab6:
             right_image_batch,
             right_original_image,
             right_processed_image
-        ) = st.session_state["right_prediction"]
+        ) = st.session_state[
+            "right_prediction"
+        ]
 
         left_class = class_names[
             left_class_index
@@ -1982,7 +2946,9 @@ with tab7:
             left_image_batch,
             left_original_image,
             left_processed_image
-        ) = st.session_state["left_prediction"]
+        ) = st.session_state[
+            "left_prediction"
+        ]
 
         (
             right_class_index,
@@ -1990,7 +2956,9 @@ with tab7:
             right_image_batch,
             right_original_image,
             right_processed_image
-        ) = st.session_state["right_prediction"]
+        ) = st.session_state[
+            "right_prediction"
+        ]
 
         # ---------------------------------------------------------------------
         # SUMMARY
@@ -2052,7 +3020,9 @@ with tab7:
                 "### 👁️ Left Eye"
             )
 
-            for i, probability in enumerate(left_probs):
+            for i, probability in enumerate(
+                left_probs
+            ):
 
                 st.progress(
                     float(probability),
@@ -2068,7 +3038,9 @@ with tab7:
                 "### 👁️ Right Eye"
             )
 
-            for i, probability in enumerate(right_probs):
+            for i, probability in enumerate(
+                right_probs
+            ):
 
                 st.progress(
                     float(probability),
@@ -2235,6 +3207,11 @@ st.markdown(
       infallible. Image quality, dataset limitations, rare
       conditions, and variations in disease presentation may
       affect performance.
+
+    * **Image Quality Assessment Limitations:** The image quality
+      module uses technical image characteristics such as
+      resolution, brightness, contrast, and sharpness. It does
+      not determine whether an image is clinically suitable.
 
     * **Grad-CAM Limitations:** Grad-CAM shows regions associated
       with model attention. It does not prove the presence of
