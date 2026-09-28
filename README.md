@@ -4,7 +4,7 @@
 
 ### AI-Powered Retinal Image Classification with Explainable AI
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ocular-diseases-detection-atharva-salitri.streamlit.app/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ocular-diseases-detection-using-cnn-atharva-salitri.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21.0-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
 [![Keras](https://img.shields.io/badge/Keras-3.15.1-D00000?logo=keras&logoColor=white)](https://keras.io/)
@@ -57,7 +57,7 @@
 
 <div align="center">
 
-### 👉 [**Try the Live Application →**](https://ocular-diseases-detection-atharva-salitri.streamlit.app/)
+### 👉 [**Try the Live Application →**](https://ocular-diseases-detection-using-cnn-atharva-salitri.streamlit.app/)
 
 </div>
 
@@ -668,6 +668,6 @@ flowchart TD
 
 **Made for educational and research purposes · Not a medical device**
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ocular-diseases-detection-atharva-salitri.streamlit.app/)
+[![Old Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ocular-diseases-detection-atharva-salitri.streamlit.app/)
 
 </div>
