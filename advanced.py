@@ -177,6 +177,60 @@ st.markdown("""
     background:linear-gradient(90deg,transparent,#bfdbfe,transparent);
     margin:1.2rem 0;
 }
+
+/* ── chatbot ──────────────────────────────────────────────── */
+.chat-user {
+    background:#eff6ff; border:1px solid #bfdbfe;
+    border-radius:12px 12px 2px 12px;
+    padding:.75rem 1rem; margin:.5rem 0; color:#1e3a5f;
+    font-size:.9rem; line-height:1.55; max-width:85%; margin-left:auto;
+}
+.chat-ai {
+    background:#fff; border:1px solid #e2e8f0;
+    border-radius:2px 12px 12px 12px;
+    padding:.75rem 1rem; margin:.5rem 0; color:#1e293b;
+    font-size:.9rem; line-height:1.6; max-width:90%;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.chat-ai-mock {
+    border-left:3px solid #f59e0b;
+}
+.chat-label-user {
+    font-size:.7rem; font-weight:700; color:#3b82f6;
+    text-transform:uppercase; letter-spacing:.8px;
+    text-align:right; margin-bottom:2px;
+}
+.chat-label-ai {
+    font-size:.7rem; font-weight:700; color:#64748b;
+    text-transform:uppercase; letter-spacing:.8px; margin-bottom:2px;
+}
+.chat-label-mock {
+    font-size:.7rem; font-weight:700; color:#f59e0b;
+    text-transform:uppercase; letter-spacing:.8px; margin-bottom:2px;
+}
+.prompt-chip {
+    display:inline-block; background:#eff6ff; border:1px solid #bfdbfe;
+    border-radius:20px; padding:5px 14px; margin:4px 4px 4px 0;
+    font-size:.8rem; color:#1e40af; cursor:pointer; transition:all .15s;
+    font-weight:500;
+}
+.prompt-chip:hover {
+    background:#dbeafe; border-color:#93c5fd; color:#1e3a5f;
+}
+.api-status-ok   { color:#15803d; font-size:.8rem; font-weight:600; }
+.api-status-mock { color:#a16207; font-size:.8rem; font-weight:600; }
+.api-status-off  { color:#dc2626; font-size:.8rem; font-weight:600; }
+
+/* ── citation badges ──────────────────────────────────────────────────────── */
+.cite-badge {
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:.72rem; font-weight:600; letter-spacing:.3px;
+    margin:2px 3px 2px 0; border:1px solid;
+}
+.cite-aao  { background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+.cite-ada  { background:#f0fdf4; color:#15803d; border-color:#86efac; }
+.cite-who  { background:#fef9c3; color:#a16207; border-color:#fde047; }
+.cite-gen  { background:#f8fafc; color:#475569; border-color:#e2e8f0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -652,7 +706,8 @@ def calculate_image_quality(image):
 
     warnings = []
     if total_px < 200_000:
-        warnings.append("Low resolution — prediction reliability may be reduced.")
+        warnings.append(
+            "Low resolution — prediction reliability may be reduced.")
     if brightness < 30:
         warnings.append("Image appears very dark.")
     elif brightness > 230:
@@ -689,7 +744,8 @@ def calculate_image_quality(image):
 def display_image_quality_assessment(image, title="Image Quality Assessment"):
     q = calculate_image_quality(image)
     st.subheader(title)
-    st.caption("Technical image metrics only — do not determine clinical validity.")
+    st.caption(
+        "Technical image metrics only — do not determine clinical validity.")
 
     c1, c2 = st.columns([1, 2])
     with c1:
@@ -1108,7 +1164,8 @@ def plot_activation_distribution(heatmap, eye_label):
                label=f"Mean {np.mean(flat):.2f}")
     ax.axvline(float(np.percentile(flat, 90)), color="#f59e0b", lw=1.5, ls=":",
                label=f"P90 {np.percentile(flat, 90):.2f}")
-    ax.set_title(f"Activation Distribution — {eye_label}", fontsize=9, fontweight="600")
+    ax.set_title(
+        f"Activation Distribution — {eye_label}", fontsize=9, fontweight="600")
     ax.set_xlabel("Activation", fontsize=8, color="#475569")
     ax.set_ylabel("Count", fontsize=8, color="#475569")
     ax.spines["top"].set_visible(False)
@@ -1208,7 +1265,8 @@ def text_report(lci, lp, rci, rp):
     ]
     for i, p in enumerate(lp):
         marker = " ◀" if i == lci else ""
-        lines.append(f"  {DISPLAY_NAMES[class_names[i]]:<28} {p*100:.2f}%{marker}")
+        lines.append(
+            f"  {DISPLAY_NAMES[class_names[i]]:<28} {p*100:.2f}%{marker}")
     lines += [
         "", "-" * 60, "RIGHT EYE", "-" * 60,
         f"Prediction       : {DISPLAY_NAMES[rc]}",
@@ -1219,7 +1277,8 @@ def text_report(lci, lp, rci, rp):
     ]
     for i, p in enumerate(rp):
         marker = " ◀" if i == rci else ""
-        lines.append(f"  {DISPLAY_NAMES[class_names[i]]:<28} {p*100:.2f}%{marker}")
+        lines.append(
+            f"  {DISPLAY_NAMES[class_names[i]]:<28} {p*100:.2f}%{marker}")
     lines += [
         "", "-" * 60, "BILATERAL SUMMARY", "-" * 60,
         f"Agreement : {'Yes' if lc == rc else 'No — asymmetric findings'}",
@@ -1304,7 +1363,8 @@ st.markdown("""
 
 with st.sidebar:
     st.markdown("## 👁️ Ocular Disease Detection")
-    st.markdown('<div class="sec-title">Model Info</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-title">Model Info</div>',
+                unsafe_allow_html=True)
     st.markdown(f"""
 - **Architecture:** Custom CNN
 - **Input:** 224 × 224 px
@@ -1314,9 +1374,10 @@ with st.sidebar:
 """)
 
     st.markdown("---")
-    st.markdown('<div class="sec-title">Disease Legend</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-title">Disease Legend</div>',
+                unsafe_allow_html=True)
     risk_colors = {"low": "#15803d", "medium": "#a16207", "high": "#dc2626"}
-    risk_bgs    = {"low": "#dcfce7", "medium": "#fef9c3", "high": "#fee2e2"}
+    risk_bgs = {"low": "#dcfce7", "medium": "#fef9c3", "high": "#fee2e2"}
     for k in class_names:
         rc = risk_colors[CLASS_RISK[k][0]]
         bg = risk_bgs[CLASS_RISK[k][0]]
@@ -1356,19 +1417,20 @@ with st.sidebar:
 # =============================================================================
 
 (tab_about, tab_pred, tab_xai, tab_analysis,
- tab_bilateral, tab_report, tab_followup,
+ tab_bilateral, tab_report, tab_followup, tab_chatbot,
  tab_viz, tab_disease, tab_how) = st.tabs([
-    "📖 About",
-    "🔍 Predict",
-    "🔬 Explainable AI",
-    "📊 Analysis",
-    "⚖️ Bilateral",
-    "📋 Report",
-    "📅 Follow-Up",
-    "📈 Visualizations",
-    "📚 Disease Library",
-    "⚙️ How It Works",
-])
+     "📖 About",
+     "🔍 Predict",
+     "🔬 Explainable AI",
+     "📊 Analysis",
+     "⚖️ Bilateral",
+     "📋 Report",
+     "📅 Follow-Up",
+     "🤖 AI Assistant",
+     "📈 Visualizations",
+     "📚 Disease Library",
+     "⚙️ How It Works",
+ ])
 
 
 # =============================================================================
@@ -1428,7 +1490,8 @@ can be combined in a clinician-friendly interface for educational and research p
 
 with tab_pred:
     st.header("🔍 Upload Retinal Images for Classification")
-    st.markdown("Upload fundus photographs for both eyes. Accepted: **JPG, JPEG, PNG**.")
+    st.markdown(
+        "Upload fundus photographs for both eyes. Accepted: **JPG, JPEG, PNG**.")
 
     ul, ur = st.columns(2)
     with ul:
@@ -1447,10 +1510,10 @@ with tab_pred:
             "Shows how the image is transformed before entering the model — "
             "original, contrast-enhanced, grayscale, and edge-detected."
         )
-        src_file  = Left_Eye if Left_Eye else Right_Eye
-        src_img   = Image.open(src_file).convert("RGB")
-        views     = preprocessing_views(src_img)
-        pc        = st.columns(4)
+        src_file = Left_Eye if Left_Eye else Right_Eye
+        src_img = Image.open(src_file).convert("RGB")
+        views = preprocessing_views(src_img)
+        pc = st.columns(4)
         for col, (name, img) in zip(pc, views.items()):
             with col:
                 st.image(img, caption=name, use_container_width=True)
@@ -1460,16 +1523,20 @@ with tab_pred:
     dl, dr = st.columns(2)
     with dl:
         if Left_Eye:
-            st.image(Left_Eye, caption="Left Eye — Uploaded", use_container_width=True)
+            st.image(Left_Eye, caption="Left Eye — Uploaded",
+                     use_container_width=True)
             lqi = Image.open(Left_Eye).convert("RGB")
             with st.expander("🖼️ Left Eye — Image Quality", expanded=True):
-                left_q_data = display_image_quality_assessment(lqi, "Left Eye Quality")
+                left_q_data = display_image_quality_assessment(
+                    lqi, "Left Eye Quality")
     with dr:
         if Right_Eye:
-            st.image(Right_Eye, caption="Right Eye — Uploaded", use_container_width=True)
+            st.image(Right_Eye, caption="Right Eye — Uploaded",
+                     use_container_width=True)
             rqi = Image.open(Right_Eye).convert("RGB")
             with st.expander("🖼️ Right Eye — Image Quality", expanded=True):
-                right_q_data = display_image_quality_assessment(rqi, "Right Eye Quality")
+                right_q_data = display_image_quality_assessment(
+                    rqi, "Right Eye Quality")
 
     if Left_Eye and Right_Eye:
         try:
@@ -1495,14 +1562,16 @@ with tab_pred:
                 (rr, rci, rp, "Right Eye"),
             ]:
                 with col:
-                    cls    = class_names[cls_idx]
-                    conf   = probs[cls_idx] * 100
+                    cls = class_names[cls_idx]
+                    conf = probs[cls_idx] * 100
                     is_dis = cls != "normal"
                     card_c = "rcard-disease" if is_dis else "rcard-normal"
-                    bar_c  = "cbar-red"      if is_dis else "cbar-grn"
-                    qq     = st.session_state["left_quality" if eye_label == "Left Eye" else "right_quality"]
-                    rp_    = compute_risk_profile(cls, conf, qq["overall_score"])
-                    bdg    = {"low": "badge-low", "medium": "badge-med", "high": "badge-high"}[rp_["base_risk"]]
+                    bar_c = "cbar-red" if is_dis else "cbar-grn"
+                    qq = st.session_state["left_quality" if eye_label ==
+                                          "Left Eye" else "right_quality"]
+                    rp_ = compute_risk_profile(cls, conf, qq["overall_score"])
+                    bdg = {"low": "badge-low", "medium": "badge-med",
+                           "high": "badge-high"}[rp_["base_risk"]]
 
                     st.markdown(f"""
                     <div class="rcard {card_c}">
@@ -1526,15 +1595,18 @@ with tab_pred:
                     </div>
                     """, unsafe_allow_html=True)
 
-                    fig = plot_probability_bars(probs, f"{eye_label} — All Classes")
+                    fig = plot_probability_bars(
+                        probs, f"{eye_label} — All Classes")
                     st.pyplot(fig, use_container_width=True)
                     plt.close(fig)
 
                     with st.expander("🔄 Prediction Stability"):
                         cf = counterfactual(probs, cls_idx)
-                        st.markdown(f"**{cf['stability']}** — margin: `{cf['margin']:.1f}%`")
+                        st.markdown(
+                            f"**{cf['stability']}** — margin: `{cf['margin']:.1f}%`")
                         st.caption(cf['desc'])
-                        st.markdown(f"Runner-up: **{cf['second_name']}** at `{cf['second_conf']:.1f}%`")
+                        st.markdown(
+                            f"Runner-up: **{cf['second_name']}** at `{cf['second_conf']:.1f}%`")
 
         except Exception as exc:
             st.error(f"Prediction error: {exc}")
@@ -1577,7 +1649,8 @@ with tab_xai:
             )
             sel_cmap = GRAD_COLORMAPS[sel_cmap_label]
         with gc3:
-            gc_alpha = st.slider("Overlay Intensity", 0.2, 0.8, 0.45, 0.05, key="gc_alpha")
+            gc_alpha = st.slider("Overlay Intensity", 0.2,
+                                 0.8, 0.45, 0.05, key="gc_alpha")
 
         lobj = next((l for l in model.layers if l.name == sel_layer), None)
         if lobj:
@@ -1604,7 +1677,8 @@ with tab_xai:
         ]:
             st.markdown(f"### 👁️ {eye_label} — Grad-CAM")
             try:
-                heatmap = generate_gradcam_heatmap(image_batch, cls_idx, sel_layer)
+                heatmap = generate_gradcam_heatmap(
+                    image_batch, cls_idx, sel_layer)
                 colored, overlay = apply_heatmap_to_image(
                     original_image, heatmap, colormap=sel_cmap, alpha=gc_alpha
                 )
@@ -1617,11 +1691,14 @@ with tab_xai:
 
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    st.image(original_image, caption="Original", use_container_width=True)
+                    st.image(original_image, caption="Original",
+                             use_container_width=True)
                 with c2:
-                    st.image(colored, caption=f"Heatmap ({sel_cmap_label})", use_container_width=True)
+                    st.image(
+                        colored, caption=f"Heatmap ({sel_cmap_label})", use_container_width=True)
                 with c3:
-                    st.image(overlay, caption="Overlay", use_container_width=True)
+                    st.image(overlay, caption="Overlay",
+                             use_container_width=True)
 
                 st.download_button(
                     f"💾 Download {eye_label} Overlay",
@@ -1658,7 +1735,8 @@ with tab_xai:
                     except:
                         shp = "N/A"
                         prm = "N/A"
-                    rows.append({"#": i, "Name": ln, "Output Shape": shp, "Params": prm})
+                    rows.append(
+                        {"#": i, "Name": ln, "Output Shape": shp, "Params": prm})
             st.dataframe(rows, hide_index=True, use_container_width=True)
 
 
@@ -1696,14 +1774,22 @@ with tab_analysis:
 
         st.subheader("📐 Quality Metrics — Side by Side")
         rows = [
-            ("Resolution",     f"{lq['width']}×{lq['height']}",   f"{rq['width']}×{rq['height']}"),
-            ("Total Pixels",   f"{lq['total_px']:,}",              f"{rq['total_px']:,}"),
-            ("Brightness",     f"{lq['brightness']:.2f}",          f"{rq['brightness']:.2f}"),
-            ("Contrast",       f"{lq['contrast']:.2f}",            f"{rq['contrast']:.2f}"),
-            ("Sharpness",      f"{lq['sharpness']:.2f}",           f"{rq['sharpness']:.2f}"),
-            ("SNR",            f"{lq['snr']:.2f}",                 f"{rq['snr']:.2f}"),
-            ("Entropy (bits)", f"{lq['entropy']:.3f}",             f"{rq['entropy']:.3f}"),
-            ("Overall Score",  f"{lq['overall_score']:.1f}/100",   f"{rq['overall_score']:.1f}/100"),
+            ("Resolution",     f"{lq['width']}×{lq['height']}",
+             f"{rq['width']}×{rq['height']}"),
+            ("Total Pixels",   f"{lq['total_px']:,}",
+             f"{rq['total_px']:,}"),
+            ("Brightness",     f"{lq['brightness']:.2f}",
+             f"{rq['brightness']:.2f}"),
+            ("Contrast",       f"{lq['contrast']:.2f}",
+             f"{rq['contrast']:.2f}"),
+            ("Sharpness",      f"{lq['sharpness']:.2f}",
+             f"{rq['sharpness']:.2f}"),
+            ("SNR",            f"{lq['snr']:.2f}",
+             f"{rq['snr']:.2f}"),
+            ("Entropy (bits)", f"{lq['entropy']:.3f}",
+             f"{rq['entropy']:.3f}"),
+            ("Overall Score",  f"{lq['overall_score']:.1f}/100",
+             f"{rq['overall_score']:.1f}/100"),
         ]
         table_rows = "".join(
             f"<tr><td><strong>{m}</strong></td><td>{l}</td><td>{r}</td></tr>"
@@ -1727,8 +1813,10 @@ with tab_analysis:
             with col:
                 cf = counterfactual(probs, cls_idx)
                 st.markdown(f"**{eye_lbl}**")
-                st.markdown(f"**{cf['stability']}** — margin `{cf['margin']:.1f}%`")
-                st.markdown(f"Runner-up: **{cf['second_name']}** at `{cf['second_conf']:.1f}%`")
+                st.markdown(
+                    f"**{cf['stability']}** — margin `{cf['margin']:.1f}%`")
+                st.markdown(
+                    f"Runner-up: **{cf['second_name']}** at `{cf['second_conf']:.1f}%`")
                 st.caption(cf["desc"])
 
 
@@ -1748,8 +1836,8 @@ with tab_bilateral:
     else:
         (lci, lp, _, lo, _) = st.session_state["left_prediction"]
         (rci, rp, _, ro, _) = st.session_state["right_prediction"]
-        lc    = class_names[lci]
-        rc    = class_names[rci]
+        lc = class_names[lci]
+        rc = class_names[rci]
         lconf = lp[lci] * 100
         rconf = rp[rci] * 100
 
@@ -1762,7 +1850,8 @@ with tab_bilateral:
                 st.image(img, caption=eye_lbl, use_container_width=True)
                 is_dis = cls != "normal"
                 card_c = "rcard-disease" if is_dis else "rcard-normal"
-                bdg_c  = {"low": "badge-low", "medium": "badge-med", "high": "badge-high"}[CLASS_RISK[cls][0]]
+                bdg_c = {"low": "badge-low", "medium": "badge-med",
+                         "high": "badge-high"}[CLASS_RISK[cls][0]]
                 st.markdown(f"""
                 <div class="rcard {card_c}">
                   <div style="font-size:1.2rem;font-weight:700;color:#0f172a;">
@@ -1779,7 +1868,8 @@ with tab_bilateral:
         st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
 
         sym = bilateral_symmetry(lp, rp, lci, rci)
-        bdg_c = {"low": "badge-low", "medium": "badge-med", "high": "badge-high"}[sym["risk"]]
+        bdg_c = {"low": "badge-low", "medium": "badge-med",
+                 "high": "badge-high"}[sym["risk"]]
         st.subheader("🔀 Bilateral Symmetry Analysis")
         st.markdown(
             f'<span class="badge {bdg_c}">{sym["label"]}</span>'
@@ -1788,19 +1878,23 @@ with tab_bilateral:
         )
 
         m1, m2, m3 = st.columns(3)
-        with m1: st.metric("Symmetry Score", f"{sym['sym_score']:.1f}%")
-        with m2: st.metric("KL Divergence",  f"{sym['kl']:.4f}")
-        with m3: st.metric("Agreement",      "✅ Yes" if sym["agree"] else "❌ No")
+        with m1:
+            st.metric("Symmetry Score", f"{sym['sym_score']:.1f}%")
+        with m2:
+            st.metric("KL Divergence",  f"{sym['kl']:.4f}")
+        with m3:
+            st.metric("Agreement",      "✅ Yes" if sym["agree"] else "❌ No")
 
         st.markdown("**Per-class probability difference (Left − Right):**")
         fig_d, ax_d = plt.subplots(figsize=(6, 2.4))
         diff_vals = (lp - rp) * 100
-        colors_d  = ["#22c55e" if v >= 0 else "#ef4444" for v in diff_vals]
+        colors_d = ["#22c55e" if v >= 0 else "#ef4444" for v in diff_vals]
         ax_d.bar([DISPLAY_NAMES[c] for c in class_names], diff_vals,
                  color=colors_d, edgecolor="none", alpha=0.85)
         ax_d.axhline(0, color="#94a3b8", linewidth=1)
         ax_d.set_ylabel("L − R (%)", fontsize=8, color="#475569")
-        ax_d.set_title("Left − Right Probability Difference", fontsize=9, fontweight="600")
+        ax_d.set_title("Left − Right Probability Difference",
+                       fontsize=9, fontweight="600")
         ax_d.tick_params(labelsize=8)
         ax_d.spines["top"].set_visible(False)
         ax_d.spines["right"].set_visible(False)
@@ -1814,9 +1908,11 @@ with tab_bilateral:
         st.subheader("🩺 Clinical Guidance")
         if lc == rc:
             if lc == "normal":
-                st.success(f"✅ Both eyes: **Normal**. {CLASS_RISK['normal'][1]}.")
+                st.success(
+                    f"✅ Both eyes: **Normal**. {CLASS_RISK['normal'][1]}.")
             else:
-                st.warning(f"⚠️ Both eyes: **{DISPLAY_NAMES[lc]}**. {CLASS_RISK[lc][1]}.")
+                st.warning(
+                    f"⚠️ Both eyes: **{DISPLAY_NAMES[lc]}**. {CLASS_RISK[lc][1]}.")
         else:
             st.warning(
                 f"⚠️ **Asymmetric findings** — Left: {DISPLAY_NAMES[lc]}, "
@@ -1841,10 +1937,14 @@ with tab_report:
         rq = st.session_state.get("right_quality")
 
         m1, m2, m3, m4 = st.columns(4)
-        with m1: st.metric("Left Eye",        DISPLAY_NAMES[class_names[lci]])
-        with m2: st.metric("Left Confidence", f"{lp[lci]*100:.2f}%")
-        with m3: st.metric("Right Eye",        DISPLAY_NAMES[class_names[rci]])
-        with m4: st.metric("Right Confidence", f"{rp[rci]*100:.2f}%")
+        with m1:
+            st.metric("Left Eye",        DISPLAY_NAMES[class_names[lci]])
+        with m2:
+            st.metric("Left Confidence", f"{lp[lci]*100:.2f}%")
+        with m3:
+            st.metric("Right Eye",        DISPLAY_NAMES[class_names[rci]])
+        with m4:
+            st.metric("Right Confidence", f"{rp[rci]*100:.2f}%")
 
         st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
         st.subheader("📊 Detailed Probabilities")
@@ -1913,21 +2013,27 @@ with tab_followup:
 
         # Summary metrics
         sm1, sm2, sm3, sm4 = st.columns(4)
-        with sm1: st.metric("Left Eye",        DISPLAY_NAMES[lc])
-        with sm2: st.metric("Left Confidence", f"{lp[lci]*100:.1f}%")
-        with sm3: st.metric("Right Eye",        DISPLAY_NAMES[rc])
-        with sm4: st.metric("Right Confidence", f"{rp[rci]*100:.1f}%")
+        with sm1:
+            st.metric("Left Eye",        DISPLAY_NAMES[lc])
+        with sm2:
+            st.metric("Left Confidence", f"{lp[lci]*100:.1f}%")
+        with sm3:
+            st.metric("Right Eye",        DISPLAY_NAMES[rc])
+        with sm4:
+            st.metric("Right Confidence", f"{rp[rci]*100:.1f}%")
 
         st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
 
         # Left eye card
-        fu_left = generate_followup_recommendation(lc, lp[lci]*100, lq["overall_score"])
+        fu_left = generate_followup_recommendation(
+            lc, lp[lci]*100, lq["overall_score"])
         display_followup_card(fu_left, "Left Eye")
 
         st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
 
         # Right eye card
-        fu_right = generate_followup_recommendation(rc, rp[rci]*100, rq["overall_score"])
+        fu_right = generate_followup_recommendation(
+            rc, rp[rci]*100, rq["overall_score"])
         display_followup_card(fu_right, "Right Eye")
 
         st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
@@ -1935,7 +2041,7 @@ with tab_followup:
         # Overall priority triage
         st.subheader("🚦 Overall Priority Triage")
         overall_risk = (
-            "high"   if fu_left["tier"] == "high"   or fu_right["tier"] == "high"
+            "high" if fu_left["tier"] == "high" or fu_right["tier"] == "high"
             else "medium" if fu_left["tier"] == "medium" or fu_right["tier"] == "medium"
             else "low"
         )
@@ -1991,7 +2097,7 @@ with tab_viz:
          "Representative retinal images used during training."),
         ("04_evaluate.png",        "4. Training & Validation Curves",
          "Accuracy and loss curves across epochs."),
-        ("05_confusion_matrix.png","5. Confusion Matrix",
+        ("05_confusion_matrix.png", "5. Confusion Matrix",
          "Per-class classification performance on the test set."),
         ("06_roc_curve.png",       "6. ROC-AUC Curves",
          "Multi-class ROC curves measuring discrimination ability."),
@@ -2029,9 +2135,9 @@ with tab_disease:
             ):
                 st.session_state["sel_disease"] = key
 
-    ds   = st.session_state["sel_disease"]
+    ds = st.session_state["sel_disease"]
     info = DISEASE_INFO[ds]
-    clr  = CLASS_COLORS_MPL[ds]
+    clr = CLASS_COLORS_MPL[ds]
 
     st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
     st.markdown(
@@ -2044,10 +2150,14 @@ with tab_disease:
     )
 
     q1, q2, q3, q4 = st.columns(4)
-    with q1: st.metric("Global Prevalence",   info["prevalence"])
-    with q2: st.metric("Screening Frequency", info["screening_freq"])
-    with q3: st.metric("ICD-10 Code",         info["icd_code"])
-    with q4: st.metric("AI Risk Level",       CLASS_RISK[ds][0].upper())
+    with q1:
+        st.metric("Global Prevalence",   info["prevalence"])
+    with q2:
+        st.metric("Screening Frequency", info["screening_freq"])
+    with q3:
+        st.metric("ICD-10 Code",         info["icd_code"])
+    with q4:
+        st.metric("AI Risk Level",       CLASS_RISK[ds][0].upper())
 
     st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
     sc1, sc2 = st.columns(2)
@@ -2134,20 +2244,754 @@ with tab_how:
 - **Dense (Softmax)** — 4 output neurons, one per class
 """)
     if GRADCAM_LAYERS:
-        st.markdown(f"**Grad-CAM compatible layers:** `{', '.join(GRADCAM_LAYERS)}`")
+        st.markdown(
+            f"**Grad-CAM compatible layers:** `{', '.join(GRADCAM_LAYERS)}`")
 
     st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
     st.subheader("📦 Tech Stack")
     t1, t2, t3 = st.columns(3)
     with t1:
-        st.markdown("**Model & Inference**\n- TensorFlow / Keras\n- Custom CNN\n- Hugging Face Hub")
+        st.markdown(
+            "**Model & Inference**\n- TensorFlow / Keras\n- Custom CNN\n- Hugging Face Hub")
     with t2:
-        st.markdown("**Explainability**\n- Grad-CAM (custom graph)\n- Multi-layer support\n- 6 colormaps")
+        st.markdown(
+            "**Explainability**\n- Grad-CAM (custom graph)\n- Multi-layer support\n- 6 colormaps")
     with t3:
-        st.markdown("**App & Visualisation**\n- Streamlit\n- Matplotlib\n- Pillow / SciPy")
+        st.markdown(
+            "**App & Visualisation**\n- Streamlit\n- Matplotlib\n- Pillow / SciPy")
 
 
 # =============================================================================
+# TAB — AI ASSISTANT (Gemini + Mock fallback)
+# =============================================================================
+
+# ── Mock answer bank ────────────────────────────────────────────────────────
+
+# =============================================================================
+# AI ASSISTANT — CONSTANTS, HELPERS, CHATBOT TAB
+# =============================================================================
+
+# ── Follow-up question bank keyed by disease ─────────────────────────────────
+
+FOLLOWUP_QUESTIONS = {
+    "glaucoma": [
+        "What is intraocular pressure and why does it matter for glaucoma?",
+        "Can glaucoma be reversed, or only slowed?",
+        "How often should I get a visual field test if I have glaucoma?",
+        "What lifestyle changes can lower eye pressure?",
+    ],
+    "diabetic_retinopathy": [
+        "What is HbA1c and why does it matter for diabetic retinopathy?",
+        "How quickly can diabetic retinopathy progress if untreated?",
+        "What is diabetic macular oedema and how is it treated?",
+        "Does blood pressure control really affect retinopathy?",
+    ],
+    "cataract": [
+        "At what point is cataract surgery actually necessary?",
+        "What happens during phacoemulsification surgery?",
+        "Can cataracts come back after surgery?",
+        "Are there any non-surgical ways to slow cataract progression?",
+    ],
+    "normal": [
+        "How often should a person with no eye disease get a check-up?",
+        "What early warning signs of eye disease should I watch for?",
+        "Does diet or lifestyle affect long-term eye health?",
+        "At what age does glaucoma risk start increasing significantly?",
+    ],
+}
+
+# ── Mock answer bank ──────────────────────────────────────────────────────────
+
+MOCK_ANSWERS = {
+    "left eye shows dr": (
+        "**Asymmetric DR findings (one eye affected, the other normal) are actually not uncommon**, "
+        "especially in early or moderate-stage diabetic retinopathy. Diabetes affects both eyes "
+        "over time, but the microvascular damage often progresses at different rates. The eye with "
+        "better blood flow or less historical exposure to high glucose levels may remain unaffected "
+        "longer. That said, asymmetric findings should always be evaluated by a retinal specialist — "
+        "it doesn't mean the 'normal' eye is permanently protected. Annual dilated exams are mandatory "
+        "for both eyes in all diabetic patients."
+    ),
+    "grad-cam": (
+        "**Grad-CAM (Gradient-weighted Class Activation Mapping)** shows *where the model was "
+        "looking* when it made its prediction. The heatmap overlays colours on the retinal image — "
+        "red/bright areas = regions that most strongly pushed the model toward the predicted class; "
+        "blue/cool areas = regions with less influence.\n\n"
+        "**Important caveat:** Grad-CAM shows model attention, not clinical disease location. "
+        "A bright spot over the optic disc for a Glaucoma prediction is reassuring (that's anatomically "
+        "correct), but a bright spot elsewhere doesn't necessarily mean that region is pathological. "
+        "It means the model found those pixels influential for this classification."
+    ),
+    "34 years old": (
+        "**At 34 with Type 2 diabetes, a high-confidence DR prediction warrants prompt action.** "
+        "DR risk correlates strongly with duration of diabetes and glycaemic control (HbA1c). "
+        "Even in younger patients, poor blood sugar control over several years causes cumulative "
+        "microvascular damage. A high-confidence prediction here means the model detected "
+        "retinal changes consistent with DR. The recommended action is a **retinal specialist "
+        "referral within 1 week**, not waiting for your next routine exam. Bring your most recent "
+        "HbA1c, blood pressure readings, and medication list to the appointment."
+    ),
+    "moderate and high confidence": (
+        "In this app, **confidence** refers to the model's softmax probability for the predicted class:\n\n"
+        "- **High Confidence (≥ 80% effective):** The model is decisive. The predicted class received "
+        "a probability score well above the alternatives. The risk tier is set higher, and follow-up "
+        "recommendations are more urgent.\n\n"
+        "- **Moderate Confidence (55–79% effective):** The model leans toward the prediction but has "
+        "some uncertainty — another class received a meaningful share of probability. Results should "
+        "be interpreted more cautiously.\n\n"
+        "Note: 'effective confidence' is adjusted for image quality. A 90% raw confidence on a "
+        "blurry, low-contrast image becomes ~67.5% effective, and the urgency tier adjusts accordingly."
+    ),
+    "kl-divergence": (
+        "**KL-Divergence (Kullback-Leibler Divergence)** in the Bilateral tab measures how different "
+        "the two eyes' probability distributions are from each other.\n\n"
+        "Think of it this way: each eye produces a set of 4 probabilities (one per disease class). "
+        "KL-divergence asks: *'If I assumed the left eye's distribution was truth, how surprised "
+        "would I be by the right eye's distribution?'*\n\n"
+        "- **KL ≈ 0:** Both eyes gave nearly identical probability distributions — very symmetric.\n"
+        "- **KL > 0.5:** Meaningful divergence — the eyes disagree significantly on the probabilities, "
+        "even if they ended up predicting the same class.\n\n"
+        "High KL-divergence on top of different predicted classes is a stronger asymmetry signal "
+        "and warrants clinical attention."
+    ),
+    "questions should i ask": (
+        "Here are **key questions to ask your ophthalmologist** based on these results:\n\n"
+        "**If DR was detected:**\n"
+        "- What stage is my diabetic retinopathy (mild/moderate/severe/proliferative)?\n"
+        "- Do I have diabetic macular oedema?\n"
+        "- Do I need anti-VEGF injections or laser treatment now?\n"
+        "- What HbA1c and blood pressure targets should I aim for?\n\n"
+        "**If Glaucoma was detected:**\n"
+        "- What is my intraocular pressure today?\n"
+        "- Do I need a visual field test?\n"
+        "- Should I start eye drops, and which type?\n\n"
+        "**General questions:**\n"
+        "- How often should I return for follow-up?\n"
+        "- Are there lifestyle changes that could slow progression?\n"
+        "- Should I get my family members screened?"
+    ),
+    "hba1c": (
+        "**HbA1c (glycated haemoglobin)** is a blood test that reflects your average blood sugar "
+        "level over the past 2–3 months. It is the single most important metric for managing "
+        "diabetic retinopathy risk.\n\n"
+        "- **Target for DR prevention:** < 7% (53 mmol/mol) per ADA guidelines\n"
+        "- **Why it matters:** Every 1% reduction in HbA1c reduces DR progression risk by ~35%\n"
+        "- **How often to test:** Every 3 months if uncontrolled; every 6 months if stable\n\n"
+        "Poor HbA1c control is the strongest modifiable risk factor for developing and worsening DR."
+    ),
+    "progress": (
+        "**Diabetic retinopathy progression rate** depends heavily on glycaemic and blood pressure control:\n\n"
+        "- **Mild NPDR → Moderate NPDR:** Can occur within 1–2 years without intervention\n"
+        "- **Moderate NPDR → Severe NPDR:** ~15% per year without treatment\n"
+        "- **Severe NPDR → PDR:** ~50% progress to proliferative DR within 1 year\n\n"
+        "With good HbA1c control (< 7%), blood pressure control (< 130/80 mmHg), and regular "
+        "monitoring, progression can be significantly slowed. This is why early detection and "
+        "prompt specialist referral are critical."
+    ),
+    "intraocular pressure": (
+        "**Intraocular pressure (IOP)** is the fluid pressure inside the eye. Elevated IOP is the "
+        "primary risk factor for glaucoma-related optic nerve damage.\n\n"
+        "- **Normal range:** 10–21 mmHg\n"
+        "- **Glaucoma threshold:** > 21 mmHg is considered elevated (though some develop glaucoma "
+        "at normal pressures — 'normal tension glaucoma')\n"
+        "- **How it's measured:** Tonometry (air puff or contact probe)\n\n"
+        "IOP-lowering treatments (eye drops, laser, surgery) are the cornerstone of glaucoma management. "
+        "Reducing IOP by 30% typically halves the rate of visual field progression."
+    ),
+    "surgery": (
+        "**Cataract surgery (phacoemulsification)** is one of the most commonly performed and "
+        "safest surgeries in the world:\n\n"
+        "1. A small incision (~2–3 mm) is made in the cornea\n"
+        "2. Ultrasound energy breaks up the cloudy lens\n"
+        "3. The fragments are removed by suction\n"
+        "4. An artificial intraocular lens (IOL) is implanted\n"
+        "5. No stitches are usually needed — the incision is self-sealing\n\n"
+        "The procedure takes 15–30 minutes. Vision often improves within 24–48 hours. "
+        "Success rate for significant vision improvement exceeds 95% in uncomplicated cases."
+    ),
+}
+
+SUGGESTED_PROMPTS = [
+    "My left eye shows DR at 87% but right eye is normal — is that common?",
+    "What does the Grad-CAM heatmap actually mean for my result?",
+    "I'm 34 years old with Type 2 diabetes, how urgent is this really?",
+    "What's the difference between moderate and high confidence here?",
+    "Explain the KL-divergence score in simple terms",
+    "What questions should I ask my ophthalmologist?",
+]
+
+
+def get_mock_answer(question: str) -> str:
+    q = question.lower()
+    for key, answer in MOCK_ANSWERS.items():
+        if key in q:
+            return answer
+    return (
+        "That's a great question about your results. While I'm running in demo mode "
+        "and can't give a fully personalised answer right now, I can tell you that "
+        "all predictions shown are generated by a Custom CNN trained on 4,200+ retinal "
+        "images. For specific clinical questions, the **📅 Follow-Up tab** has detailed "
+        "AAO/ADA guideline-based recommendations for your exact prediction and confidence tier. "
+        "And always — consult a qualified ophthalmologist for any medical decisions."
+    )
+
+
+def get_followup_suggestions(n: int = 2) -> list:
+    """
+    Return n contextually relevant follow-up questions based on the
+    predicted disease for the left eye (or right if left not available).
+    Falls back to generic questions if no prediction has been run.
+    """
+    cls = None
+    if "left_prediction" in st.session_state:
+        lci = st.session_state["left_prediction"][0]
+        cls = class_names[lci]
+    elif "right_prediction" in st.session_state:
+        rci = st.session_state["right_prediction"][0]
+        cls = class_names[rci]
+
+    pool = FOLLOWUP_QUESTIONS.get(cls, FOLLOWUP_QUESTIONS["normal"])
+
+    # Don't suggest questions already in chat history
+    asked = {m["content"] for m in st.session_state.get("chat_history", [])}
+    fresh = [q for q in pool if q not in asked]
+    return fresh[:n] if fresh else pool[:n]
+
+
+def build_session_context() -> str:
+    """Serialize current session state into a string for Gemini system prompt."""
+    lines = ["## Current Patient Session Results\n"]
+
+    if "left_prediction" in st.session_state and "right_prediction" in st.session_state:
+        lci, lp, _, _, _ = st.session_state["left_prediction"]
+        rci, rp, _, _, _ = st.session_state["right_prediction"]
+        lq = st.session_state.get("left_quality", {})
+        rq = st.session_state.get("right_quality", {})
+
+        lc = class_names[lci]
+        rc = class_names[rci]
+        lconf = lp[lci] * 100
+        rconf = rp[rci] * 100
+        lrisk = CLASS_RISK[lc][0]
+        rrisk = CLASS_RISK[rc][0]
+        lq_score = lq.get("overall_score", "N/A")
+        rq_score = rq.get("overall_score", "N/A")
+
+        def eff_conf(conf, q_score):
+            if isinstance(q_score, float):
+                if q_score < 65:
+                    return conf * 0.75
+                if q_score < 85:
+                    return conf * 0.90
+            return conf
+
+        lec = eff_conf(lconf, lq_score)
+        rec = eff_conf(rconf, rq_score)
+
+        def tier(ec, cls_name):
+            if cls_name == "normal":
+                return "low"
+            return "high" if ec >= 80 else "medium" if ec >= 55 else "low"
+
+        lt = tier(lec, lc)
+        rt = tier(rec, rc)
+
+        lines.append(f"**Left Eye Prediction:** {DISPLAY_NAMES[lc]}")
+        lines.append(f"- Raw Confidence: {lconf:.1f}%")
+        lines.append(f"- Effective Confidence (quality-adjusted): {lec:.1f}%")
+        lines.append(f"- Risk Level: {lrisk.upper()}")
+        lines.append(f"- Follow-Up Tier: {lt.upper()}")
+        lines.append(
+            f"- Image Quality Score: {lq_score if isinstance(lq_score, str) else f'{lq_score:.1f}/100'}")
+        lines.append(f"- Recommended Action: {CLASS_RISK[lc][1]}\n")
+
+        lines.append(f"**Right Eye Prediction:** {DISPLAY_NAMES[rc]}")
+        lines.append(f"- Raw Confidence: {rconf:.1f}%")
+        lines.append(f"- Effective Confidence (quality-adjusted): {rec:.1f}%")
+        lines.append(f"- Risk Level: {rrisk.upper()}")
+        lines.append(f"- Follow-Up Tier: {rt.upper()}")
+        lines.append(
+            f"- Image Quality Score: {rq_score if isinstance(rq_score, str) else f'{rq_score:.1f}/100'}")
+        lines.append(f"- Recommended Action: {CLASS_RISK[rc][1]}\n")
+
+        # Bilateral
+        kl = float(sum(
+            p * (np.log(p + 1e-9) - np.log(q + 1e-9))
+            for p, q in zip(lp, rp)
+        ))
+        agree = lci == rci
+        lines.append(f"**Bilateral Analysis:**")
+        lines.append(
+            f"- Predictions agree: {'Yes' if agree else 'No — asymmetric findings'}")
+        lines.append(f"- KL-Divergence: {kl:.4f}")
+
+        lines.append(f"\n**All Class Probabilities:**")
+        for i, cn in enumerate(class_names):
+            lines.append(
+                f"- {DISPLAY_NAMES[cn]}: L={lp[i]*100:.1f}%, R={rp[i]*100:.1f}%")
+
+        # Feature 12 — confidence-aware instruction modifier
+        worst_tier = "high" if lt == "high" or rt == "high" else "medium" if lt == "medium" or rt == "medium" else "low"
+        lines.append(f"\n## Answer Calibration Instruction")
+        if worst_tier == "high":
+            lines.append(
+                "The effective confidence is HIGH. You may give relatively direct, specific answers "
+                "grounded in the session results. Still remind the user to consult a professional, "
+                "but you do not need to heavily hedge every statement."
+            )
+        elif worst_tier == "medium":
+            lines.append(
+                "The effective confidence is MODERATE. Acknowledge uncertainty in your answers. "
+                "Note that the model is not fully certain and that results should be confirmed "
+                "by a qualified ophthalmologist before any action is taken."
+            )
+        else:
+            lines.append(
+                "The effective confidence is LOW. Strongly emphasise uncertainty throughout your answer. "
+                "Recommend professional evaluation prominently. Do not present the AI result as reliable "
+                "on its own — image quality or low model confidence has reduced reliability significantly."
+            )
+    else:
+        lines.append("No prediction has been run yet in this session.")
+        lines.append("\n## Answer Calibration Instruction")
+        lines.append(
+            "No results are available. Encourage the user to upload retinal images in the "
+            "Predict tab first. Answer general ophthalmology education questions only."
+        )
+
+    return "\n".join(lines)
+
+
+def call_gemini_stream(api_key: str, messages: list, system_ctx: str):
+    """
+    Streaming Gemini call. Yields text chunks as they arrive.
+    Yields a special sentinel tuple ("__ERROR__", error_string) on failure.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        yield ("__ERROR__", "Package missing. Run: pip install google-genai")
+        return
+
+    try:
+        client = genai.Client(api_key=api_key.strip())
+
+        system_prompt = (
+            "You are an AI ophthalmology education assistant embedded in an ocular disease "
+            "detection application. You help users understand their AI-generated retinal image "
+            "classification results. You are knowledgeable, empathetic, and clear.\n\n"
+            "RESPONSE FORMAT — you MUST structure every answer using these exact three sections:\n"
+            "**🔍 What This Means**\n"
+            "Explain what the result or concept means in plain language. 2-3 sentences.\n\n"
+            "**✅ What To Do**\n"
+            "Give 2-4 concrete, actionable steps the person can take. Use bullet points.\n\n"
+            "**🏥 When To See A Doctor**\n"
+            "State clearly when professional evaluation is needed and with what urgency. "
+            "1-2 sentences. Always include this section even for routine findings.\n\n"
+            "If the question is purely conceptual (e.g. asking what KL-divergence means), "
+            "you may omit the doctor section but keep the other two sections.\n\n"
+            "ALWAYS:\n"
+            "- Ground your answers in the session results provided below\n"
+            "- Follow the Answer Calibration Instruction in the context\n"
+            "- Use the three-section format above for every response\n"
+            "- Keep each section concise — total response under 250 words\n\n"
+            "NEVER:\n"
+            "- Make definitive diagnoses\n"
+            "- Recommend specific medications by name\n"
+            "- Claim this tool is a medical device\n"
+            "- Write free-form paragraphs without the section headers\n\n"
+            f"## Session Context\n{system_ctx}"
+        )
+
+        history = []
+        for m in messages[:-1]:
+            history.append(
+                types.Content(
+                    role=m["role"],
+                    parts=[types.Part(text=m["parts"][0]["text"])],
+                )
+            )
+
+        user_text = messages[-1]["parts"][0]["text"]
+        contents = history + [
+            types.Content(role="user", parts=[types.Part(text=user_text)])
+        ]
+        cfg = types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            temperature=0.7,
+            max_output_tokens=1024,
+        )
+
+        MODELS_TO_TRY = [
+            "gemini-3.5-flash-lite",
+            "gemini-3.8-flash",
+        ]
+
+        stream = None
+        last_err = None
+        for model_name in MODELS_TO_TRY:
+            try:
+                stream = client.models.generate_content_stream(
+                    model=model_name,
+                    contents=contents,
+                    config=cfg,
+                )
+                # test the first chunk to confirm model works
+                first_chunk = next(iter(stream))
+                yield first_chunk.text or ""
+                break
+            except StopIteration:
+                break
+            except Exception as model_exc:
+                print(f"DEBUG stream model {model_name} failed: {model_exc}")
+                last_err = model_exc
+                stream = None
+                continue
+
+        if stream is None:
+            err = str(last_err) if last_err else "All models failed."
+            yield ("__ERROR__", err)
+            return
+
+        # yield remaining chunks
+        for chunk in stream:
+            if chunk.text:
+                yield chunk.text
+
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        yield ("__ERROR__", f"{type(exc).__name__}: {str(exc)[:300]}")
+
+
+# ── Rate limit helper ─────────────────────────────────────────────────────────
+
+def _is_rate_limited(min_gap_sec: float = 2.0) -> bool:
+    """Return True if last Gemini call was less than min_gap_sec ago."""
+    import time
+    last = st.session_state.get("last_gemini_call_ts", 0)
+    return (time.time() - last) < min_gap_sec
+
+
+def _mark_gemini_call():
+    import time
+    st.session_state["last_gemini_call_ts"] = time.time()
+
+
+# ── Core send function — shared by chips AND manual input ─────────────────────
+
+def _send_question(question: str, gemini_key: str):
+    """
+    Add question to history, call Gemini (streaming) or mock,
+    append answer, then st.rerun().
+    Called by both chip clicks and manual chat_input.
+    """
+    import time
+
+    # Rate limit check
+    if _is_rate_limited():
+        st.toast("⏳ Please wait a moment before sending another message.", icon="⏳")
+        return
+
+    st.session_state["chat_history"].append(
+        {"role": "user", "content": question})
+    ctx = build_session_context()
+
+    if gemini_key:
+        gemini_msgs = [
+            {"role": "user" if m["role"] == "user" else "model",
+             "parts": [{"text": m["content"]}]}
+            for m in st.session_state["chat_history"]
+        ]
+        _mark_gemini_call()
+
+        # Streaming — write chunks into a placeholder
+        placeholder = st.empty()
+        full_text = ""
+        error_occurred = False
+        error_msg = ""
+
+        with placeholder.container():
+            stream_box = st.empty()
+
+        for chunk in call_gemini_stream(gemini_key, gemini_msgs, ctx):
+            if isinstance(chunk, tuple) and chunk[0] == "__ERROR__":
+                error_occurred = True
+                error_msg = chunk[1]
+                break
+            full_text += chunk
+            stream_box.markdown(
+                f'<div class="chat-label-ai">AI Assistant</div>'
+                f'<div class="chat-ai">{full_text}▌</div>',
+                unsafe_allow_html=True,
+            )
+
+        placeholder.empty()
+
+        if error_occurred:
+            err_friendly = _friendly_error(error_msg)
+            st.warning(err_friendly)
+            answer = "🟡 *Gemini unavailable — built-in demo answer:*\n\n" + \
+                get_mock_answer(question)
+            mode = "mock"
+        else:
+            answer = full_text
+            mode = "ai"
+
+    else:
+        _mark_gemini_call()
+        answer = get_mock_answer(question)
+        mode = "mock"
+
+    st.session_state["chat_history"].append({
+        "role": "assistant", "content": answer, "mode": mode,
+        "question": question
+    })
+    st.rerun()
+
+
+# ── Citation badge mapping ────────────────────────────────────────────────────
+
+DISEASE_CITATIONS = {
+    "glaucoma": [
+        ("📖 AAO PPP — Glaucoma (2020)", "cite-aao"),
+        ("📖 WHO Global Eye Health", "cite-who"),
+    ],
+    "diabetic_retinopathy": [
+        ("📖 AAO PPP — Diabetic Retinopathy (2019)", "cite-aao"),
+        ("📖 ADA Standards of Care (2023)", "cite-ada"),
+        ("📖 WHO World Report on Vision", "cite-who"),
+    ],
+    "cataract": [
+        ("📖 AAO PPP — Cataract (2021)", "cite-aao"),
+    ],
+    "normal": [
+        ("📖 AAO Adult Eye Evaluation (2020)", "cite-aao"),
+    ],
+}
+
+TOPIC_CITATIONS = {
+    "grad-cam":       [("📖 Selvaraju et al., Grad-CAM (ICCV 2017)", "cite-gen")],
+    "kl-divergence":  [("📖 Information Theory — KL Divergence", "cite-gen")],
+    "hba1c":          [("📖 ADA Standards of Care (2023)", "cite-ada")],
+    "confidence":     [("📖 Model Calibration — Softmax Probability", "cite-gen")],
+    "intraocular":    [("📖 AAO PPP — Glaucoma (2020)", "cite-aao")],
+    "surgery":        [("📖 AAO PPP — Cataract (2021)", "cite-aao")],
+    "progress":       [("📖 ADA Standards of Care (2023)", "cite-ada")],
+}
+
+
+def _get_citation_badges(question: str, mode: str) -> str:
+    """
+    Return HTML string of citation badge pills for a given question + mode.
+    Looks up by:
+      1. Topic keywords in the question text
+      2. Currently predicted disease from session state
+    Falls back to a generic AI-generated content badge in mock mode.
+    """
+    badges = []
+    q_lower = question.lower()
+
+    # Topic-keyword match first
+    for keyword, cites in TOPIC_CITATIONS.items():
+        if keyword in q_lower:
+            badges.extend(cites)
+            break  # one topic match is enough
+
+    # Disease-based citations (always added for disease-related questions)
+    if not badges or any(
+        kw in q_lower for kw in ["result", "eye", "urgent", "common", "ophthalmologist", "ask"]
+    ):
+        cls = None
+        if "left_prediction" in st.session_state:
+            cls = class_names[st.session_state["left_prediction"][0]]
+        elif "right_prediction" in st.session_state:
+            cls = class_names[st.session_state["right_prediction"][0]]
+        if cls and cls in DISEASE_CITATIONS:
+            for cite in DISEASE_CITATIONS[cls]:
+                if cite not in badges:
+                    badges.append(cite)
+
+    # Mock mode — always add a note
+    if mode == "mock":
+        badges.append(("🟡 Built-in knowledge base (demo mode)", "cite-gen"))
+
+    if not badges:
+        badges.append(("📖 AAO / ADA Clinical Guidelines", "cite-aao"))
+
+    return "".join(
+        f'<span class="cite-badge {cls}">{label}</span>'
+        for label, cls in badges
+    )
+
+
+def _friendly_error(err: str) -> str:
+    if "API_KEY_INVALID" in err or "api key" in err.lower():
+        return "❌ Invalid API key — check your `.env` file or Streamlit secrets."
+    if "PERMISSION_DENIED" in err or "permission" in err.lower():
+        return "❌ Permission denied — ensure Gemini API is enabled at aistudio.google.com."
+    if "quota" in err.lower() or "RESOURCE_EXHAUSTED" in err:
+        return "❌ Quota exceeded — free-tier limit reached, try again in a minute."
+    if "not found" in err.lower() or "404" in err:
+        return f"❌ Model not available: {err[:150]}"
+    return f"❌ Gemini error: {err[:200]}"
+
+
+# =============================================================================
+# TAB — AI ASSISTANT
+# =============================================================================
+
+with tab_chatbot:
+    st.header("🤖 AI Clinical Assistant")
+    st.markdown(
+        "Ask questions about your prediction results, what the metrics mean, "
+        "or what to expect at your next ophthalmology appointment. "
+        "The assistant has full context of your current session results."
+    )
+
+    # ── Load API key from st.secrets (cloud) or .env / env var (local) ───────
+    gemini_key = ""
+    try:
+        gemini_key = st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        pass
+    if not gemini_key:
+        try:
+            from dotenv import load_dotenv as _load_dotenv
+            _load_dotenv()
+        except ImportError:
+            pass
+        import os as _os
+        gemini_key = _os.environ.get("GEMINI_API_KEY", "")
+
+    # ── Mode banner ───────────────────────────────────────────────────────────
+    if gemini_key:
+        st.success(
+            "✅ **Gemini AI mode active** — streaming responses with session context & confidence-aware tuning.")
+    else:
+        st.warning(
+            "🟡 **Demo mode** — `GEMINI_API_KEY` not found. "
+            "Add it to `.env` locally or Streamlit secrets for cloud deployment."
+        )
+
+    st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
+
+    # ── Session state init ────────────────────────────────────────────────────
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = []
+    if "chip_question" not in st.session_state:
+        st.session_state["chip_question"] = None
+    if "last_gemini_call_ts" not in st.session_state:
+        st.session_state["last_gemini_call_ts"] = 0
+
+    # ── Suggested prompt chips ────────────────────────────────────────────────
+    st.markdown("**💬 Suggested questions — click to ask instantly:**")
+    chip_cols = st.columns(3)
+    for idx, prompt in enumerate(SUGGESTED_PROMPTS):
+        with chip_cols[idx % 3]:
+            if st.button(prompt, key=f"chip_{idx}", use_container_width=True):
+                st.session_state["chip_question"] = prompt
+
+    st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
+
+    # ── Fire chip question immediately ────────────────────────────────────────
+    if st.session_state["chip_question"] is not None:
+        question = st.session_state["chip_question"]
+        st.session_state["chip_question"] = None
+        _send_question(question, gemini_key)
+
+    # ── Chat history display ──────────────────────────────────────────────────
+    if st.session_state["chat_history"]:
+        st.markdown("**Conversation:**")
+        history_to_show = st.session_state["chat_history"]
+        for msg_idx, msg in enumerate(history_to_show):
+            if msg["role"] == "user":
+                st.markdown(
+                    f'<div class="chat-label-user">You</div>'
+                    f'<div class="chat-user">{msg["content"]}</div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                mode = msg.get("mode", "ai")
+                label_cls = "chat-label-mock" if mode == "mock" else "chat-label-ai"
+                card_extra = "chat-ai-mock" if mode == "mock" else ""
+                label_txt = "Demo Answer" if mode == "mock" else "AI Assistant"
+                # Render label
+                st.markdown(
+                    f'<div class="{label_cls}">{label_txt}</div>',
+                    unsafe_allow_html=True,
+                )
+                # Render content as proper markdown (fixes bold, bullets, newlines)
+                content_clean = msg["content"]
+                # Strip mock prefix line for cleaner display
+                if content_clean.startswith("🟡 *Gemini unavailable"):
+                    parts = content_clean.split("\n\n", 1)
+                    if len(parts) == 2:
+                        st.caption(parts[0])
+                        content_clean = parts[1]
+                with st.container():
+                    st.markdown(content_clean)
+                # Citation badges
+                q_for_cite = msg.get("question", msg["content"][:80])
+                badges_html = _get_citation_badges(q_for_cite, mode)
+                st.markdown(
+                    f'<div style="margin:.2rem 0 .5rem;">{badges_html}</div>',
+                    unsafe_allow_html=True,
+                )
+
+                # Feature 8 — follow-up suggestions after LAST AI message only
+                if msg_idx == len(history_to_show) - 1:
+                    suggestions = get_followup_suggestions(n=2)
+                    if suggestions:
+                        st.markdown(
+                            '<div style="font-size:.78rem;color:#64748b;'
+                            'margin:.4rem 0 .2rem;">💡 Follow-up questions:</div>',
+                            unsafe_allow_html=True,
+                        )
+                        fu_cols = st.columns(len(suggestions))
+                        for fi, fq in enumerate(suggestions):
+                            with fu_cols[fi]:
+                                if st.button(
+                                    fq,
+                                    key=f"followup_{msg_idx}_{fi}",
+                                    use_container_width=True,
+                                ):
+                                    st.session_state["chip_question"] = fq
+
+    else:
+        st.markdown(
+            '<div style="color:#94a3b8;font-size:.9rem;text-align:center;padding:2rem 0;">'
+            '👆 Click a suggested question above, or type your own below.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
+
+    # ── Manual chat input ─────────────────────────────────────────────────────
+    user_input = st.chat_input("Ask a question about your results…")
+    if user_input and user_input.strip():
+        _send_question(user_input.strip(), gemini_key)
+
+    # ── Clear conversation ────────────────────────────────────────────────────
+    if st.session_state["chat_history"]:
+        if st.button("🗑️ Clear Conversation", key="clear_chat"):
+            st.session_state["chat_history"] = []
+            st.rerun()
+
+    # ── Context preview ───────────────────────────────────────────────────────
+    with st.expander("🔍 View session context sent to AI"):
+        st.markdown(build_session_context())
+        if "left_prediction" not in st.session_state:
+            st.info("Run a prediction in the 🔍 Predict tab to populate the context.")
+
+    st.markdown('<hr class="fdiv">', unsafe_allow_html=True)
+    st.caption(
+        "⚠️ AI responses are for educational purposes only and are not medical advice. "
+        "Always consult a qualified ophthalmologist for clinical decisions."
+    )
+
 # FOOTER
 # =============================================================================
 
